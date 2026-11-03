@@ -1,9 +1,6 @@
 /** Cliente API común. Los errores del backend se muestran; no se sustituyen por datos simulados. */
 const API = (() => {
-  const BASE_URL = window.location.hostname === "localhost" || 
-                 window.location.hostname === "127.0.0.1"
-  ? "http://localhost:8080/api"
-  : "https://mariana-plasticos-backend.onrender.com/api";
+  const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
 
   async function request(ruta, opciones = {}) {
     const resp = await fetch(`${BASE_URL}${ruta}`, { headers: {'Content-Type':'application/json'}, ...opciones });
