@@ -7,7 +7,7 @@
  *  - Mejor manejo de errores al eliminar
  */
 
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'https://mariana-plasticos-backend.onrender.com/api';
 let usuarioActual = null;
 let cache = {
   productos: [], categorias: [], inventario: [], movimientos: [],
