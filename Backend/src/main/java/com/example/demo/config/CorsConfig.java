@@ -14,6 +14,7 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
+        // ✅ ESTA LÍNEA ES LA CLAVE — permite a GitHub Pages
         config.addAllowedOriginPattern("*");
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -24,3 +25,4 @@ public class CorsConfig {
         return new CorsFilter(source);
     }
 }
+
