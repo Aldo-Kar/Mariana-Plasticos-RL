@@ -9,17 +9,16 @@ import java.util.List;
 
 @Configuration
 public class CorsConfig {
-    
+
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        
+
         // ✅ Permitir TODO
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("*"));
-        config.addAllowedOriginPattern("*");
+        config.addAllowedOriginPattern("*"); // ✅ Esta sola
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
