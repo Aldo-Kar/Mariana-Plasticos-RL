@@ -3,7 +3,7 @@ const API = (() => {
   const BASE_URL = window.location.hostname === "localhost" || 
                  window.location.hostname === "127.0.0.1"
   ? "http://localhost:8080/api"
-  : "https://PON-TU-URL-DE-RENDER-AQUI.onrender.com/api";
+  : "https://mariana-plasticos-backend.onrender.com/api";
 
   async function request(ruta, opciones = {}) {
     const resp = await fetch(`${BASE_URL}${ruta}`, { headers: {'Content-Type':'application/json'}, ...opciones });
