@@ -1,16 +1,16 @@
-# Etapa 1: Compilar el proyecto
+# Etapa 1: Compilar
 FROM maven:3.9-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copiar archivos del backend
-COPY Backend/pom.xml .
+# Todo está dentro de la carpeta Backend/
+COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-COPY Backend/src ./src
+COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Etapa 2: Ejecutar la aplicación
+# Etapa 2: Ejecutar
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
