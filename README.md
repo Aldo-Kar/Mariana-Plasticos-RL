@@ -57,8 +57,7 @@ Mariana-Plasticos/
     ├── css/styles.css
     └── js/
         ├── api.js                     # Cliente REST hacia el backend
-        ├── app.js                     # Lógica de la interfaz (CRUD, navegación, asistente)
-        └── data.js                    # Datos de referencia / respaldo (no se usan si la API responde)
+        └── app.js                     # Lógica de la interfaz (CRUD, navegación, asistente)
 ```
 
 ---
@@ -70,13 +69,8 @@ Mariana-Plasticos/
 2. Ejecuta el script `Backend/mariana_plasticos.sql` **una sola vez** (crea la BD `mariana_plasticos` con tablas y datos de prueba).  
    > No lo vuelvas a ejecutar cada vez que inicies la app: contiene instrucciones de creación/borrado.
 
-### 2. Backend (Spring Boot)
-```bash
-cd Backend/demo/demo
-./mvnw spring-boot:run        # Linux / macOS
-mvnw.cmd spring-boot:run      # Windows
-```
-El backend arranca en `http://localhost:8080`.
+### 2. Backend (online)
+El backend arranca en `https://mariana-plasticos-backend.onrender.com/api` 
 
 Configura las credenciales de MySQL en `src/main/resources/application.properties`  
 o con variables de entorno:
@@ -89,18 +83,8 @@ o con variables de entorno:
 
 > No subas contraseñas reales al repositorio.
 
-También puedes abrir `Backend/demo/demo` en IntelliJ IDEA como proyecto Maven y ejecutar `MarianaPlasticosApplication`.
-
-### 3. Frontend
-Sirve la carpeta `Frontend` con un servidor estático (no abras `index.html` como `file://`):
-
-```bash
-cd Frontend
-python3 -m http.server 5500
-# luego abre http://localhost:5500
-```
-
-O usa **Live Server** de VS Code.
+### 3. Frontend (online)
+El Frontend arranca en `https://aldo-kar.github.io/Mariana-Plasticos-RL/Frontend/index.html` 
 
 ---
 
