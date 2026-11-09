@@ -2,15 +2,42 @@ const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
 
 const API = (() => {
   async function request(ruta, opciones = {}) {
+  try {
     const resp = await fetch(`${BASE_URL}${ruta}`, {
       headers: { "Content-Type": "application/json" },
       ...opciones
     });
-    const cuerpo = await resp.json().catch(() => ({}));
-    if (!resp.ok || cuerpo.success === false)
-      throw new Error(cuerpo.message || `Error ${resp.status}`);
+
+    // Leer como texto primero para evitar error de JSON
+    const textoRespuesta = await resp.text();
+    
+    let cuerpo;
+    try {
+      cuerpo = JSON.parse(textoRespuesta);
+    } catch (errorParse) {
+      cuerpo = { 
+        success: false, 
+        message: textoRespuesta || "Respuesta no válida del servidor" 
+      };
+    }
+
+    // Verificar estado
+    if (!resp.ok || cuerpo.success === false) {
+      throw new Error(cuerpo.message || `Error ${resp.status}: ${resp.statusText}`);
+    }
+
     return cuerpo.data !== undefined ? cuerpo.data : cuerpo;
+
+  } catch (errorRed) {
+    throw new Error(
+      errorRed.message.includes("Failed to fetch") || errorRed.message.includes("NetworkError")
+        ? "🔌 No hay conexión con el servidor. Si está en Render, espera 30–60s y vuelve a intentar.\nDetalles: " + errorRed.message
+        : errorRed.message
+    );
   }
+}
+
+
 
   function crud(recurso) {
     return {
