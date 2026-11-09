@@ -442,7 +442,7 @@ async function guardarMovimiento() {
   const tipo = document.getElementById('movTipo').value;
   const idProducto = Number(document.getElementById('movProducto').value);
   const cantidad = Number(document.getElementById('movCantidad').value);
-  const obs = document.getElementById('movObservaciones').value.trim();   // ✅ Solo lo que escribe el usuario
+  const obs = document.getElementById('movObservaciones').value.trim();   //  Solo lo que escribe el usuario
 
   if (!idProducto || !Number.isInteger(cantidad) || cantidad < 1) {
     alert('Selecciona un producto e indica una cantidad entera mayor que cero.');
@@ -468,7 +468,7 @@ async function guardarMovimiento() {
       return;
     }
 
-    // ✅ Observaciones LIMPIAS (solo lo que escribió el usuario)
+    //  Observaciones LIMPIAS (solo lo que escribió el usuario)
     await post('/movimientos', {
       idUsuario: usuarioId,
       tipoMovimiento: tipo,
@@ -935,12 +935,6 @@ async function guardarCliente() {
   }
 }
 
-// ==================== ASISTENTE IA (simulado) ====================
-function enviarSugerencia(texto) {
-  document.getElementById('chatInput').value = texto;
-  enviarMensaje();
-}
-
 async function enviarMensaje() {
     const input = document.getElementById('chatInput');
     const texto = input.value.trim();
@@ -950,69 +944,46 @@ async function enviarMensaje() {
     box.innerHTML += `<div class="message user">${esc(texto)}</div>`;
     input.value = '';
 
-    // Mensaje temporal de espera
+    // Mensaje de espera
     const esperandoId = 'msg-esperando-' + Date.now();
     box.innerHTML += `<div id="${esperandoId}" class="message bot"><em>Mariana IA está pensando...</em></div>`;
     box.scrollTop = box.scrollHeight;
 
-    // Construcción limpia del contexto del inventario actual
-    let contextoInventario = "INFORMACIÓN REAL DEL SISTEMA:\n";
-    contextoInventario += "- Productos en Inventario actual: " + JSON.stringify(cache.inventario || []) + "\n";
-    contextoInventario += "- Pedidos actuales: " + JSON.stringify(cache.pedidos || []) + "\n";
-
-    const promptCompleto = `${contextoInventario}\nPregunta del usuario: ${texto}`;
+    const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
 
     try {
-        // USA TU URL DE RENDER, NUNCA localhost
-        const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
-        
-        const response = await fetch(`${BASE_URL}/ia/chat`, {
+        //  RUTA CORRECTA: /asistente/consultar
+        const response = await fetch(`${BASE_URL}/asistente/consultar`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ 
-                mensaje: texto,
-                contexto: contextoInventario
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ consulta: texto }) //  Campo correcto: "consulta"
         });
 
-        if (!response.ok) {
-            throw new Error(`Error en el servidor: ${response.status}`);
+        //  Leer como texto primero para evitar error de JSON
+        const textoRespuesta = await response.text();
+        let datos;
+        try {
+            datos = JSON.parse(textoRespuesta);
+        } catch {
+            throw new Error(textoRespuesta || "Respuesta no válida");
         }
 
-        const datos = await response.json();
-        const respuestaIA = datos.respuesta || "Recibido, procesando tu consulta...";
+        if (!response.ok || !datos.success) {
+            throw new Error(datos.message || `Error ${response.status}`);
+        }
 
-        // Eliminar mensaje de espera y mostrar la respuesta
+        //  Mostrar respuesta real del backend
         const elemEsperando = document.getElementById(esperandoId);
         if (elemEsperando) elemEsperando.remove();
-        box.innerHTML += `<div class="message bot">${esc(respuestaIA).replace(/\n/g, '<br>')}</div>`;
+        box.innerHTML += `<div class="message bot">${esc(datos.message).replace(/\n/g, '<br>')}</div>`;
 
     } catch (error) {
-        console.error("Error al conectar con Mariana IA Backend:", error);
+        console.error("Error:", error);
         const elemEsperando = document.getElementById(esperandoId);
         if (elemEsperando) elemEsperando.remove();
         
-        // Respuesta simulada cuando el backend no responde
-        const respuestas = {
-            hola: "¡Hola! Bienvenido a Mariana Plásticos ¿En qué te ayudo?",
-            inventario: "Puedes consultar el inventario en el menú lateral → Inventario. Allí ves existencias y ubicación.",
-            producto: "En Productos gestionas todos los artículos: crear, editar y eliminar.",
-            pedidos: "Los pedidos se gestionan en su sección. Puedes ver estado, total y observaciones.",
-            reportes: "Los reportes están disponibles en el menú → Reportes.",
-            cliente: "La lista de clientes está disponible en el menú → Clientes."
-        };
-
-        let respuesta = "Claro, pregúntame sobre: inventario, productos, pedidos o reportes.";
-        for (const [clave, valor] of Object.entries(respuestas)) {
-            if (texto.toLowerCase().includes(clave)) {
-                respuesta = valor;
-                break;
-            }
-        }
-        
-        box.innerHTML += `<div class="message bot">${respuesta}</div>`;
+        //  Mensaje de error claro
+        box.innerHTML += `<div class="message bot"> ${error.message}<br>Si Render estaba inactivo, espera 30s y vuelve a intentar.</div>`;
     }
 
     box.scrollTop = box.scrollHeight;
