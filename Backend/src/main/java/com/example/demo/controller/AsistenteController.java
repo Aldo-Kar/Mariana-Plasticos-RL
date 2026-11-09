@@ -1,11 +1,11 @@
-package main.java.com.example.demo.controller;
+package com.example.demo.controller;
 
 import com.example.demo.service.AsistenteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.Map;  // ✅ Asegúrate de que esta línea esté
 
 @RestController
 @RequestMapping("/api/asistente")
@@ -20,4 +20,5 @@ public class AsistenteController {
         return ResponseEntity.ok(asistenteService.procesarConsulta(consulta));
     }
 }
+
 
