@@ -10,3 +10,4 @@ public interface InventarioRepository extends JpaRepository<Inventario, Integer>
     List<Inventario> findAllByIdProducto(Integer idProducto);
     List<Inventario> findAllByIdProductoAndUbicacion(Integer idProducto, String ubicacion);
 }
+

@@ -10,3 +10,11 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     List<Pedido> findByEstado(String estado);
     List<Pedido> findByIdCliente(Integer idCliente);
 }
+
+public interface PedidoRepository extends JpaRepository<Pedido, Long> {
+    List<Pedido> findByFecha(LocalDate fecha);
+    List<Pedido> findByEstado(String estado);
+    List<Pedido> findByEstadoNot(String estado);
+}
+
+

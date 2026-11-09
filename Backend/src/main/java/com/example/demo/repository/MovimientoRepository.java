@@ -10,3 +10,8 @@ public interface MovimientoRepository extends JpaRepository<Movimiento, Integer>
     List<Movimiento> findByTipoMovimiento(String tipo);
     List<Movimiento> findByIdUsuario(Integer idUsuario);
 }
+
+public interface MovimientoRepository extends JpaRepository<Movimiento, Long> {
+    List<Movimiento> findByFecha(LocalDate fecha);
+}
+
