@@ -50,6 +50,7 @@ Mariana-Plasticos/
 │           │   ├── service/           # Lógica de negocio
 │           │   ├── dto/               # DTOs de request/response
 │           │   └── exception/         # Manejo global de errores
+            │   └──service/            # maneja el servicio de la IA
 │           └── resources/
 │               └── application.properties
 └── Frontend/
