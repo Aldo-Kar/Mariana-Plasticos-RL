@@ -956,28 +956,35 @@ async function enviarMensaje() {
     box.scrollTop = box.scrollHeight;
 
     // Construcción limpia del contexto del inventario actual
-    let contextoInventario = "INFORMACIÓN REAL DEL SISTEMA (USA ESTOS DATOS SI EL USUARIO PREGUNTA POR STOCK, EXISTENCIAS O PEDIDOS):\n";
+    let contextoInventario = "INFORMACIÓN REAL DEL SISTEMA:\n";
     contextoInventario += "- Productos en Inventario actual: " + JSON.stringify(cache.inventario || []) + "\n";
     contextoInventario += "- Pedidos actuales: " + JSON.stringify(cache.pedidos || []) + "\n";
 
     const promptCompleto = `${contextoInventario}\nPregunta del usuario: ${texto}`;
 
     try {
-        const response = await fetch("http://localhost:8081/api/ia/chat", {
+        // USA TU URL DE RENDER, NUNCA localhost
+        const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
+        
+        const response = await fetch(`${BASE_URL}/ia/chat`, {
             method: "POST",
             headers: {
-                "Content-Type": "text/plain"
+                "Content-Type": "application/json"
             },
-            body: promptCompleto
+            body: JSON.stringify({ 
+                mensaje: texto,
+                contexto: contextoInventario
+            })
         });
 
         if (!response.ok) {
             throw new Error(`Error en el servidor: ${response.status}`);
         }
 
-        const respuestaIA = await response.text();
+        const datos = await response.json();
+        const respuestaIA = datos.respuesta || "Recibido, procesando tu consulta...";
 
-        // Eliminar mensaje de espera y mostrar la respuesta de Gemini
+        // Eliminar mensaje de espera y mostrar la respuesta
         const elemEsperando = document.getElementById(esperandoId);
         if (elemEsperando) elemEsperando.remove();
         box.innerHTML += `<div class="message bot">${esc(respuestaIA).replace(/\n/g, '<br>')}</div>`;
@@ -986,11 +993,31 @@ async function enviarMensaje() {
         console.error("Error al conectar con Mariana IA Backend:", error);
         const elemEsperando = document.getElementById(esperandoId);
         if (elemEsperando) elemEsperando.remove();
-        box.innerHTML += `<div class="message bot">Lo siento, hubo un problema al obtener respuesta del servidor de IA.</div>`;
+        
+        // Respuesta simulada cuando el backend no responde
+        const respuestas = {
+            hola: "¡Hola! Bienvenido a Mariana Plásticos ¿En qué te ayudo?",
+            inventario: "Puedes consultar el inventario en el menú lateral → Inventario. Allí ves existencias y ubicación.",
+            producto: "En Productos gestionas todos los artículos: crear, editar y eliminar.",
+            pedidos: "Los pedidos se gestionan en su sección. Puedes ver estado, total y observaciones.",
+            reportes: "Los reportes están disponibles en el menú → Reportes.",
+            cliente: "La lista de clientes está disponible en el menú → Clientes."
+        };
+
+        let respuesta = "Claro, pregúntame sobre: inventario, productos, pedidos o reportes.";
+        for (const [clave, valor] of Object.entries(respuestas)) {
+            if (texto.toLowerCase().includes(clave)) {
+                respuesta = valor;
+                break;
+            }
+        }
+        
+        box.innerHTML += `<div class="message bot">${respuesta}</div>`;
     }
 
     box.scrollTop = box.scrollHeight;
 }
+
 
 // ==================== UTILIDADES ====================
 function cerrarModal(id) {
