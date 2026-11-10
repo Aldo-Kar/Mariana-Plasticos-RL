@@ -34,6 +34,10 @@ public class Pedido {
     @Column(name = "cliente", length = 255) // ajusta nombre y longitud según tu tabla
     private String cliente;
 
+    @Column(name = "numero_pedido")
+    private String numeroPedido;
+
+    
     public Pedido() {
     }
 
@@ -92,4 +96,13 @@ public class Pedido {
     public void setNombreCliente(String nombreCliente) {
         this.cliente = nombreCliente;
     }
+
+    public String getNumeroPedido() {
+        return numeroPedido;
+    }
+
+    public void setNumeroPedido(String numeroPedido) {
+        this.numeroPedido = numeroPedido;
+    }
+
 }
