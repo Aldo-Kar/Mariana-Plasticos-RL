@@ -17,4 +17,5 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     List<Pedido> findByEstado(String estado);
     List<Pedido> findByEstadoNot(String estado);
     List<Pedido> findByIdCliente(Integer idCliente);
+    List<Pedido> findByNumeroPedido(String numeroPedido);
 }

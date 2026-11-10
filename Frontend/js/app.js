@@ -510,15 +510,19 @@ async function renderPedidos() {
         <td>${esc(byId(clientes, 'idCliente', p.idCliente)?.nombre || `Cliente #${p.idCliente}`)}</td>
         <td>${date(p.fechaPedido)}</td>
         <td>${money(p.total)}</td>
-        <td><span class="badge">${esc(p.estado || '—')}</span></td>
+        <td><span class="badge estado ${p.estado === 'Enviado' ? 'estado-enviado' : p.estado === 'Entregado' ? 'estado-entregado' : ''}">${esc(p.estado || '—')}</span></td>
         <td>${esc(p.observaciones || '—')}</td>
         <td class="actions">
+          ${p.estado === 'Enviado'
+        ? `<button class="btn-icon btn-success" title="Marcar como Entregado" onclick="confirmarEntregaPorIA(${p.idPedido})">🤖 Entregar</button>`
+        : ''}
   <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})">🖨️</button>
   ${botonEliminarAdmin(`eliminarPedido(${p.idPedido})`)}
 </td>
       </tr>`).join('')
     : '<tr><td colspan="7" style="text-align:center">No hay pedidos registrados</td></tr>';
 }
+
 
 function opcionesProductosPedido() {
   return `<option value="">Selecciona un producto</option>` + cache.productos
@@ -936,57 +940,57 @@ async function guardarCliente() {
 }
 
 async function enviarMensaje() {
-    const input = document.getElementById('chatInput');
-    const texto = input.value.trim();
-    if (!texto) return;
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if (!texto) return;
 
-    const box = document.getElementById('chatMessages');
-    box.innerHTML += `<div class="message user">${esc(texto)}</div>`;
-    input.value = '';
+  const box = document.getElementById('chatMessages');
+  box.innerHTML += `<div class="message user">${esc(texto)}</div>`;
+  input.value = '';
 
-    // Mensaje de espera
-    const esperandoId = 'msg-esperando-' + Date.now();
-    box.innerHTML += `<div id="${esperandoId}" class="message bot"><em>Mariana IA está pensando...</em></div>`;
-    box.scrollTop = box.scrollHeight;
+  // Mensaje de espera
+  const esperandoId = 'msg-esperando-' + Date.now();
+  box.innerHTML += `<div id="${esperandoId}" class="message bot"><em>Mariana IA está pensando...</em></div>`;
+  box.scrollTop = box.scrollHeight;
 
-    const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
+  const BASE_URL = "https://mariana-plasticos-backend.onrender.com/api";
 
+  try {
+    //  RUTA CORRECTA: /asistente/consultar
+    const response = await fetch(`${BASE_URL}/asistente/consultar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consulta: texto }) //  Campo correcto: "consulta"
+    });
+
+    //  Leer como texto primero para evitar error de JSON
+    const textoRespuesta = await response.text();
+    let datos;
     try {
-        //  RUTA CORRECTA: /asistente/consultar
-        const response = await fetch(`${BASE_URL}/asistente/consultar`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ consulta: texto }) //  Campo correcto: "consulta"
-        });
-
-        //  Leer como texto primero para evitar error de JSON
-        const textoRespuesta = await response.text();
-        let datos;
-        try {
-            datos = JSON.parse(textoRespuesta);
-        } catch {
-            throw new Error(textoRespuesta || "Respuesta no válida");
-        }
-
-        if (!response.ok || !datos.success) {
-            throw new Error(datos.message || `Error ${response.status}`);
-        }
-
-        //  Mostrar respuesta real del backend
-        const elemEsperando = document.getElementById(esperandoId);
-        if (elemEsperando) elemEsperando.remove();
-        box.innerHTML += `<div class="message bot">${esc(datos.message).replace(/\n/g, '<br>')}</div>`;
-
-    } catch (error) {
-        console.error("Error:", error);
-        const elemEsperando = document.getElementById(esperandoId);
-        if (elemEsperando) elemEsperando.remove();
-        
-        //  Mensaje de error claro
-        box.innerHTML += `<div class="message bot"> ${error.message}<br>Si Render estaba inactivo, espera 30s y vuelve a intentar.</div>`;
+      datos = JSON.parse(textoRespuesta);
+    } catch {
+      throw new Error(textoRespuesta || "Respuesta no válida");
     }
 
-    box.scrollTop = box.scrollHeight;
+    if (!response.ok || !datos.success) {
+      throw new Error(datos.message || `Error ${response.status}`);
+    }
+
+    //  Mostrar respuesta real del backend
+    const elemEsperando = document.getElementById(esperandoId);
+    if (elemEsperando) elemEsperando.remove();
+    box.innerHTML += `<div class="message bot">${esc(datos.message).replace(/\n/g, '<br>')}</div>`;
+
+  } catch (error) {
+    console.error("Error:", error);
+    const elemEsperando = document.getElementById(esperandoId);
+    if (elemEsperando) elemEsperando.remove();
+
+    //  Mensaje de error claro
+    box.innerHTML += `<div class="message bot"> ${error.message}<br>Si Render estaba inactivo, espera 30s y vuelve a intentar.</div>`;
+  }
+
+  box.scrollTop = box.scrollHeight;
 }
 
 
@@ -1081,4 +1085,31 @@ function botonesAdmin(editarOnClick, eliminarOnClick) {
 function botonEliminarAdmin(eliminarOnClick) {
   if (!esAdmin()) return '';
   return `<button class="btn-icon danger" title="Eliminar" onclick="${eliminarOnClick}">🗑️</button>`;
+}
+
+async function confirmarEntregaPorIA(idPedido, motivo = "Confirmado automáticamente") {
+  if (!confirm(`¿Marcar pedido #${idPedido} como Entregado?`)) return;
+
+  try {
+    const respuesta = await fetch(
+      `${API_BASE}/pedidos/${idPedido}/entregar-ia?motivo=${encodeURIComponent(motivo)}`,
+      { method: 'PATCH' }
+    );
+
+    const datos = await respuesta.json().catch(() => ({}));
+    
+    if (respuesta.ok && datos.success !== false) {
+      alert('✅ ' + (datos.message || 'Pedido marcado como Entregado'));
+      await cargarDatos();
+      await renderPedidos(); // Refrescar la tabla
+      return true;
+    } else {
+      alert('⚠️ ' + (datos.message || 'No se pudo actualizar'));
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('Error de conexión con el servidor. Verifica que el backend esté activo.');
+    return false;
+  }
 }

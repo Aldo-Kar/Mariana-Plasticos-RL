@@ -778,3 +778,22 @@ tr:hover td {
 .pedido-linea { display: grid; grid-template-columns: minmax(0, 1fr) 105px 36px; gap: .5rem; align-items: center; }
 .pedido-linea select, .pedido-linea input { width: 100%; min-width: 0; padding: .7rem; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #1f2937; }
 @media (max-width: 520px) { .pedido-linea { grid-template-columns: minmax(0, 1fr) 78px 32px; gap: .35rem; } }
+
+/* ===== ESTADOS DE PEDIDO Y BOTÓN IA ===== */
+.badge.estado-enviado {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--warning);
+}
+.badge.estado-entregado {
+  background: rgba(22, 163, 74, 0.15);
+  color: var(--success);
+}
+
+.btn-icon.btn-success {
+  background: var(--success);
+  color: white;
+  border: none;
+}
+.btn-icon.btn-success:hover {
+  background: #15803d;
+}
