@@ -23,15 +23,14 @@ public class CorsConfig {
         config.setAllowedOrigins(Arrays.asList(origenesPermitidos.split(",")));
         
         config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource origen = new UrlBasedCorsConfigurationSource();
         origen.registerCorsConfiguration("/api/**", config);
         return new CorsFilter(origen);
+
     }
+
 }
-
-
-
