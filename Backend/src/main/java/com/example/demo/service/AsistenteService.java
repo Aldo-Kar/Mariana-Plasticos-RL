@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class AsistenteService {
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
 
-    //Constructor manual — inicializa TODAS las dependencias
+    // Constructor manual — inicializa TODAS las dependencias
     public AsistenteService(
             ProductoRepository productoRepository,
             InventarioRepository inventarioRepository,
@@ -40,7 +41,7 @@ public class AsistenteService {
     // ==== El resto de tu código sigue IGUAL desde aquí ====
     public Map<String, Object> procesarConsulta(String consulta) {
         String resp = generarRespuesta(consulta.toLowerCase());
-        
+
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("success", true);
         resultado.put("message", resp);
@@ -146,10 +147,14 @@ public class AsistenteService {
         // 🔄 MOVIMIENTOS
         // ==============================================
         if (contiene(q, "movimiento", "movimientos", "entrada", "salida", "historial")) {
-            LocalDate hoy = LocalDate.now();
 
             if (contiene(q, "hoy", "día de hoy", "día")) {
-                List<Movimiento> mvs = movimientoRepository.findByFechaMovimiento(hoy);
+                LocalDate hoy = LocalDate.now();
+                LocalDateTime inicio = hoy.atStartOfDay();
+                LocalDateTime fin = hoy.plusDays(1).atStartOfDay();
+
+                List<Movimiento> mvs = movimientoRepository.findByFechaMovimientoBetween(inicio, fin);
+
                 if (mvs.isEmpty())
                     return "🔄 No hay movimientos registrados hoy.";
 
@@ -157,11 +162,15 @@ public class AsistenteService {
                 for (Movimiento m : mvs) {
                     String nombreProd = "Producto (ID: " + m.getIdProducto() + ")";
                     Optional<Producto> prod = productoRepository.findById(m.getIdProducto());
-                    if (prod.isPresent())
+                    if (prod.isPresent()) {
                         nombreProd = prod.get().getNombre();
+                    }
 
+                    // ⚠️ Usa el nombre EXACTO del método en tu clase Movimiento
                     sb.append(String.format("• %s — %s ×%d\n",
-                            m.getTipoMovimiento(), nombreProd, m.getCantidad()));
+                            m.getTipoMovimiento(),
+                            nombreProd,
+                            m.getCantidad())); // ← Si da error, cambia por getCantidadMovimiento()
                 }
                 return sb.toString();
             }
@@ -248,7 +257,13 @@ public class AsistenteService {
         // ==============================================
         if (contiene(q, "reporte", "resumen del día", "actividad")) {
             LocalDate hoy = LocalDate.now();
-            List<Movimiento> mvs = movimientoRepository.findByFechaMovimiento(hoy);
+            LocalDateTime inicio = hoy.atStartOfDay();
+            LocalDateTime fin = hoy.plusDays(1).atStartOfDay();
+
+            // ✅ Movimientos con rango de fechas
+            List<Movimiento> mvs = movimientoRepository.findByFechaMovimientoBetween(inicio, fin);
+
+            // ✅ Pedidos se mantienen igual (Pedido usa LocalDate)
             List<Pedido> peds = pedidoRepository.findByFecha(hoy);
 
             StringBuilder sb = new StringBuilder();

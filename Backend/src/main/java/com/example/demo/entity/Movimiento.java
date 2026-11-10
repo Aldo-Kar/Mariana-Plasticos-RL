@@ -27,7 +27,7 @@ public class Movimiento {
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 
-    // ✅ Campos agregados para que se guarden y se muestren producto y cantidad
+    // Campos agregados para que se guarden y se muestren producto y cantidad
     @Column(name = "id_producto")
     private Integer idProducto;
 
