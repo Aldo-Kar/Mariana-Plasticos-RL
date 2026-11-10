@@ -26,22 +26,14 @@
       <div id="loginError" class="login-error"></div>
       <div class="form-group">
         <label>Correo electrónico</label>
-        <input 
-        type="email" 
-        id="loginEmail" 
-        placeholder="usuario@ejemplo.com"
-        autocomplete="username">
+        <input type="email" id="loginEmail" placeholder="usuario@ejemplo.com" autocomplete="username">
       </div>
       <div class="form-group">
         <label>Contraseña</label>
-        <input 
-        type="password" 
-        id="loginPass" 
-        placeholder="••••••••"
-        autocomplete="new-password">
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="new-password">
       </div>
       <button class="btn btn-primary btn-full" onclick="login()">Ingresar al sistema</button>
-       <!-- <p style="margin-top: 1.5rem; color: var(--gray); font-size: 0.85rem; line-height: 1.5;">
+      <!-- <p style="margin-top: 1.5rem; color: var(--gray); font-size: 0.85rem; line-height: 1.5;">
         <strong>Usuarios de prueba:</strong><br>
         Admin: Oswaldo.admin@gmail.com / Oswaldo1234<br>
         Gerente: humberto.gerente@gmail.com / HumbertoG123<br>
@@ -273,7 +265,10 @@
       <div id="movimientos" class="page">
         <div class="header">
           <h2>Movimientos de Inventario</h2>
-          <button class="btn btn-primary" onclick="registrarEntradaSalida('Entrada')">+ Nuevo movimiento</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary" onclick="abrirFormularioMovimiento('Entrada')">+ Registrar Entrada</button>
+            <button class="btn btn-warning" onclick="abrirFormularioMovimiento('Salida')">− Registrar Salida</button>
+          </div>
         </div>
         <div class="table-container">
           <table>
