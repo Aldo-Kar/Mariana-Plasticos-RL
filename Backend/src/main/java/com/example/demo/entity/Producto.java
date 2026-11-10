@@ -1,9 +1,12 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 
 @Entity
+@Data  // Esto genera TODOS los getters y setters
 @Table(name = "Productos")
 public class Producto {
 
@@ -39,7 +42,7 @@ public class Producto {
     @Column(name = "url_imagen", length = 500)
     private String urlImagen;
 
-    // ✅ Agregado: stock real del producto
+    //  Agregado: stock real del producto
     @Column(name = "stock_actual")
     private Integer stockActual;
 

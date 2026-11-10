@@ -1,10 +1,13 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@Data  // Esto genera TODOS los getters y setters
 @Table(name = "Pedidos")
 public class Pedido {
 
