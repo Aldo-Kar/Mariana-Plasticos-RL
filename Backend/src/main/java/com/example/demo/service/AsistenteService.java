@@ -138,7 +138,7 @@ public class AsistenteService {
                 if (prod.isPresent()) {
                     nombreInventarioProd = prod.get().getNombre(); // ← Sin "String" aquí
                 }
-                sb.append(String.format("• %s — %d unidades\n", nombreProd, i.getCantidadActual()));
+                sb.append(String.format("• %s — %d unidades\n", nombreInventarioProd, i.getCantidadActual()));
             }
             return sb.toString();
         }
@@ -220,7 +220,10 @@ public class AsistenteService {
             }
 
             if (contiene(q, "hoy", "día de hoy")) {
-                List<Pedido> pedsHoy = pedidoRepository.findByFecha(LocalDate.now());
+                LocalDate hoy = LocalDate.now();
+                LocalDateTime inicio = hoy.atStartOfDay();
+                LocalDateTime fin = hoy.plusDays(1).atStartOfDay();
+                List<Pedido> pedsHoy = pedidoRepository.findByFechaPedidoBetween(inicio, fin);
                 if (pedsHoy.isEmpty())
                     return "🛒 No hay pedidos hoy.";
 
@@ -264,7 +267,7 @@ public class AsistenteService {
             List<Movimiento> mvs = movimientoRepository.findByFechaMovimientoBetween(inicio, fin);
 
             // ✅ Pedidos se mantienen igual (Pedido usa LocalDate)
-            List<Pedido> peds = pedidoRepository.findByFecha(hoy);
+            List<Pedido> peds = pedidoRepository.findByFechaPedidoBetween(inicio, fin);
 
             StringBuilder sb = new StringBuilder();
             sb.append("📋 Reporte — ").append(hoy.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("\n\n");
