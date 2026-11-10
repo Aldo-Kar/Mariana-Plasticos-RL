@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Data  // Esto genera TODOS los getters y setters
+@Data // Esto genera TODOS los getters y setters
 @Table(name = "Pedidos")
 public class Pedido {
 
@@ -31,23 +31,65 @@ public class Pedido {
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 
-    public Pedido() {}
+    @Column(name = "cliente", length = 255) // ajusta nombre y longitud según tu tabla
+    private String cliente;
 
-    public Integer getIdPedido() { return idPedido; }
-    public void setIdPedido(Integer idPedido) { this.idPedido = idPedido; }
+    public Pedido() {
+    }
 
-    public Integer getIdCliente() { return idCliente; }
-    public void setIdCliente(Integer idCliente) { this.idCliente = idCliente; }
+    public Integer getIdPedido() {
+        return idPedido;
+    }
 
-    public LocalDateTime getFechaPedido() { return fechaPedido; }
-    public void setFechaPedido(LocalDateTime fechaPedido) { this.fechaPedido = fechaPedido; }
+    public void setIdPedido(Integer idPedido) {
+        this.idPedido = idPedido;
+    }
 
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    public Integer getIdCliente() {
+        return idCliente;
+    }
 
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
+    public void setIdCliente(Integer idCliente) {
+        this.idCliente = idCliente;
+    }
 
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public LocalDateTime getFechaPedido() {
+        return fechaPedido;
+    }
+
+    public void setFechaPedido(LocalDateTime fechaPedido) {
+        this.fechaPedido = fechaPedido;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public String getNombreCliente() {
+        return cliente;
+    }
+
+    public void setNombreCliente(String nombreCliente) {
+        this.cliente = nombreCliente;
+    }
 }
