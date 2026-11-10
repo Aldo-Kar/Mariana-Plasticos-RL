@@ -219,13 +219,13 @@
           <table>
             <thead>
               <tr>
-                <th onclick="ordenarTabla('tablaProductos', 0)" style="cursor:pointer">Producto ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 1)" style="cursor:pointer">Categoría ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 2)" style="cursor:pointer">Marca ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 3)" style="cursor:pointer">Precio menudeo ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 4)" style="cursor:pointer">Precio mayoreo ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 5)" style="cursor:pointer">Stock ↕</th>
-                <th onclick="ordenarTabla('tablaProductos', 6)" style="cursor:pointer">Estado ↕</th>
+                <th onclick="ordenarTabla('tablaProductos', 0)" style="cursor:pointer">Producto</th>
+                <th onclick="ordenarTabla('tablaProductos', 1)" style="cursor:pointer">Categoría</th>
+                <th onclick="ordenarTabla('tablaProductos', 2)" style="cursor:pointer">Marca</th>
+                <th onclick="ordenarTabla('tablaProductos', 3)" style="cursor:pointer">Precio menudeo</th>
+                <th onclick="ordenarTabla('tablaProductos', 4)" style="cursor:pointer">Precio mayoreo</th>
+                <th onclick="ordenarTabla('tablaProductos', 5)" style="cursor:pointer">Stock</th>
+                <th onclick="ordenarTabla('tablaProductos', 6)" style="cursor:pointer">Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -241,18 +241,18 @@
           <div style="display:flex;gap:10px;">
             <!--<button class="btn btn-secondary" onclick="abrirModalInventario()">+ Agregar registro</button>-->
             <button class="btn btn-secondary" onclick="registrarEntradaSalida('Salida')">Registrar salida</button>
-            <button class="btn btn-primary" onclick="registrarEntradaSalida('Entrada')">+ Registrar entrada</button>
+            <button class="btn btn-primary" onclick="registrarEntradaSalida('Entrada')">Registrar entrada</button>
           </div>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th onclick="ordenarTabla('tablaInventario', 0)" style="cursor:pointer">Producto ↕</th>
-                <th onclick="ordenarTabla('tablaInventario', 1)" style="cursor:pointer">Ubicación ↕</th>
-                <th onclick="ordenarTabla('tablaInventario', 2)" style="cursor:pointer">Cantidad actual ↕</th>
-                <th onclick="ordenarTabla('tablaInventario', 3)" style="cursor:pointer">Stock mínimo ↕</th>
-                <th onclick="ordenarTabla('tablaInventario', 4)" style="cursor:pointer">Estado ↕</th>
+                <th onclick="ordenarTabla('tablaInventario', 0)" style="cursor:pointer">Producto</th>
+                <th onclick="ordenarTabla('tablaInventario', 1)" style="cursor:pointer">Ubicación</th>
+                <th onclick="ordenarTabla('tablaInventario', 2)" style="cursor:pointer">Cantidad actual</th>
+                <th onclick="ordenarTabla('tablaInventario', 3)" style="cursor:pointer">Stock mínimo</th>
+                <th onclick="ordenarTabla('tablaInventario', 4)" style="cursor:pointer">Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -265,21 +265,21 @@
       <div id="movimientos" class="page">
         <div class="header">
           <h2>Movimientos de Inventario</h2>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-primary" onclick="abrirFormularioMovimiento('Entrada')">+ Registrar Entrada</button>
-            <button class="btn btn-warning" onclick="abrirFormularioMovimiento('Salida')">− Registrar Salida</button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="registrarEntradaSalida('Entrada')">Registrar Entrada</button>
+            <button class="btn btn-primary" onclick="registrarEntradaSalida('Salida')">Registrar Salida</button>
           </div>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th onclick="ordenarTabla('tablaMovimientos', 0)" style="cursor:pointer">Fecha ↕</th>
-                <th onclick="ordenarTabla('tablaMovimientos', 1)" style="cursor:pointer">Tipo ↕</th>
-                <th onclick="ordenarTabla('tablaMovimientos', 2)" style="cursor:pointer">Producto(s) ↕</th>
-                <th onclick="ordenarTabla('tablaMovimientos', 3)" style="cursor:pointer">Cantidad ↕</th>
-                <th onclick="ordenarTabla('tablaMovimientos', 4)" style="cursor:pointer">Usuario ↕</th>
-                <th onclick="ordenarTabla('tablaMovimientos', 5)" style="cursor:pointer">Observaciones ↕</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 0)" style="cursor:pointer">Fecha</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 1)" style="cursor:pointer">Tipo</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 2)" style="cursor:pointer">Producto(s)</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 3)" style="cursor:pointer">Cantidad</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 4)" style="cursor:pointer">Usuario</th>
+                <th onclick="ordenarTabla('tablaMovimientos', 5)" style="cursor:pointer">Observaciones</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -292,18 +292,18 @@
       <div id="pedidos" class="page">
         <div class="header">
           <h2>Pedidos y Envíos</h2>
-          <button class="btn btn-primary" onclick="abrirModalPedido()">+ Nuevo pedido</button>
+          <button class="btn btn-primary" onclick="abrirModalPedido()">Nuevo pedido</button>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th onclick="ordenarTabla('tablaPedidos', 0)" style="cursor:pointer">Pedido ↕</th>
-                <th onclick="ordenarTabla('tablaPedidos', 1)" style="cursor:pointer">Cliente ↕</th>
-                <th onclick="ordenarTabla('tablaPedidos', 2)" style="cursor:pointer">Fecha ↕</th>
-                <th onclick="ordenarTabla('tablaPedidos', 3)" style="cursor:pointer">Total ↕</th>
-                <th onclick="ordenarTabla('tablaPedidos', 4)" style="cursor:pointer">Estado ↕</th>
-                <th onclick="ordenarTabla('tablaPedidos', 5)" style="cursor:pointer">Observaciones ↕</th>
+                <th onclick="ordenarTabla('tablaPedidos', 0)" style="cursor:pointer">Pedido</th>
+                <th onclick="ordenarTabla('tablaPedidos', 1)" style="cursor:pointer">Cliente</th>
+                <th onclick="ordenarTabla('tablaPedidos', 2)" style="cursor:pointer">Fecha</th>
+                <th onclick="ordenarTabla('tablaPedidos', 3)" style="cursor:pointer">Total</th>
+                <th onclick="ordenarTabla('tablaPedidos', 4)" style="cursor:pointer">Estado</th>
+                <th onclick="ordenarTabla('tablaPedidos', 5)" style="cursor:pointer">Observaciones</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -395,7 +395,7 @@
       <div id="clientes" class="page">
         <div class="header">
           <h2>clientes</h2>
-          <button class="btn btn-primary" onclick="abrirModalCliente()">+ Registrar Cliente</button>
+          <button class="btn btn-primary" onclick="abrirModalCliente()">Registrar Cliente</button>
         </div>
         <div class="table-container">
           <div class="table-header">
@@ -413,13 +413,13 @@
           <table>
             <thead>
               <tr>
-                <th onclick="ordenarTabla('tablaclientes', 0)" style="cursor:pointer">Id ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 1)" style="cursor:pointer">Nombre ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 2)" style="cursor:pointer">Negocio ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 3)" style="cursor:pointer">Correo ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 4)" style="cursor:pointer">Teléfono ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 5)" style="cursor:pointer">Dirección ↕</th>
-                <th onclick="ordenarTabla('tablaclientes', 6)" style="cursor:pointer">Categoría ↕</th>
+                <th onclick="ordenarTabla('tablaclientes', 0)" style="cursor:pointer">Id</th>
+                <th onclick="ordenarTabla('tablaclientes', 1)" style="cursor:pointer">Nombre</th>
+                <th onclick="ordenarTabla('tablaclientes', 2)" style="cursor:pointer">Negocio</th>
+                <th onclick="ordenarTabla('tablaclientes', 3)" style="cursor:pointer">Correo</th>
+                <th onclick="ordenarTabla('tablaclientes', 4)" style="cursor:pointer">Teléfono</th>
+                <th onclick="ordenarTabla('tablaclientes', 5)" style="cursor:pointer">Dirección</th>
+                <th onclick="ordenarTabla('tablaclientes', 6)" style="cursor:pointer">Categoría</th>
               </tr>
             </thead>
             <tbody id="tablaclientes"></tbody>
