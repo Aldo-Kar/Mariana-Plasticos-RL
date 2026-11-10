@@ -1,7 +1,11 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.*;
-import com.example.demo.repository.*;
+import com.example.demo.repository.ProductoRepository;
+import com.example.demo.repository.InventarioRepository;
+import com.example.demo.repository.MovimientoRepository;
+import com.example.demo.repository.PedidoRepository;
+import com.example.demo.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
