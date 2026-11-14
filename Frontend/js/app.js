@@ -165,7 +165,7 @@ async function renderProductos() {
   };
 
   const lista = cache.productos.filter(p => {
-    const coincideTexto = (`${p.nombre || ''} ${p.sku || ''}`).toLowerCase().includes(texto);
+    const coincideTexto = (`${p.nombre || ''} ${p.sku || ''} ${p.marca || ''}`).toLowerCase().includes(texto);
     const coincideCat = !catFiltro || String(p.idCategoria) === String(catFiltro);
     return coincideTexto && coincideCat;
   });
@@ -197,11 +197,13 @@ async function renderProductos() {
     `<option value="${c.idCategoria}">${esc(c.nombre)}</option>`
   ).join('');
 
-  // Llenar filtro de categorías
+  // Llenar filtro de categorías (siempre, para incluir Accesorios y cualquier categoría nueva)
   const filtroSel = document.getElementById('filtroCategoria');
-  if (filtroSel && filtroSel.options.length <= 1) {
+  if (filtroSel) {
+    const valorActual = filtroSel.value;
     filtroSel.innerHTML = '<option value="">Todas las categorías</option>' +
       cache.categorias.map(c => `<option value="${c.idCategoria}">${esc(c.nombre)}</option>`).join('');
+    if (valorActual) filtroSel.value = valorActual;
   }
 }
 
@@ -334,13 +336,39 @@ async function renderInventario() {
 async function abrirModalInventario(id = null) {
   await renderInventario();
   const i = id ? byId(cache.inventario, 'idInventario', id) : null;
-  const sel = document.getElementById('invProducto');
-  sel.innerHTML = cache.productos.map(p => `<option value="${p.idProducto}">${esc(p.nombre)}</option>`).join('');
-  sel.disabled = !!i;
+
+  const datalist = document.getElementById('listaProductosInv');
+  datalist.innerHTML = cache.productos
+    .map(p => `<option value="${esc(p.nombre)} (${esc(p.sku || 'sin SKU')})" data-id="${p.idProducto}"></option>`)
+    .join('');
+
+  const input = document.getElementById('invProductoInput');
+  const hidden = document.getElementById('invProducto');
 
   document.querySelector('#modalInventario .modal-header h3').textContent = i ? 'Editar Inventario' : 'Agregar al Inventario';
   document.getElementById('invId').value = i?.idInventario || '';
-  if (i) sel.value = i.idProducto;
+
+  if (i) {
+    const p = byId(cache.productos, 'idProducto', i.idProducto);
+    input.value = p ? `${p.nombre} (${p.sku || 'sin SKU'})` : '';
+    hidden.value = i.idProducto;
+    input.disabled = true;
+  } else {
+    input.value = '';
+    hidden.value = '';
+    input.disabled = false;
+  }
+
+  input.oninput = () => {
+    const val = input.value.trim().toLowerCase();
+    const match = cache.productos.find(p =>
+      `${p.nombre} (${p.sku || 'sin SKU'})`.toLowerCase() === val ||
+      (p.nombre || '').toLowerCase() === val ||
+      (p.sku || '').toLowerCase() === val
+    );
+    hidden.value = match ? match.idProducto : '';
+  };
+
   document.getElementById('invCantidad').value = i?.cantidadActual ?? 0;
   document.getElementById('invUbicacion').value = i?.ubicacion || '';
   document.getElementById('modalInventario').classList.add('active');
@@ -362,7 +390,7 @@ async function guardarInventario() {
       await put(`/inventario/${id}`, { cantidadActual: cantidad, ubicacion });
       await put(`/productos/${idProducto}`, { stockActual: cantidad });
     } else {
-      if (!idProducto) { alert('Selecciona un producto.'); return; }
+      if (!idProducto) { alert('Escribe el nombre o SKU de un producto válido.'); return; }
       if (cache.inventario.some(i => Number(i.idProducto) === idProducto)) {
         alert('Este producto ya tiene un registro de inventario; edita el registro existente.');
         return;
@@ -429,23 +457,50 @@ async function registrarEntradaSalida(tipo) {
     await cargarDatos();
     document.getElementById('movTipo').value = tipo;
     document.getElementById('modalMovimientoTitle').textContent = `Registrar ${tipo.toLowerCase()}`;
-    document.getElementById('movProducto').innerHTML = cache.productos
-      .map(p => `<option value="${p.idProducto}">${esc(p.nombre)} (${esc(p.sku || 'sin SKU')})</option>`)
+
+    // Datalist para buscar por nombre o SKU
+    const datalist = document.getElementById('listaProductosMov');
+    datalist.innerHTML = cache.productos
+      .map(p => `<option value="${esc(p.nombre)} (${esc(p.sku || 'sin SKU')})" data-id="${p.idProducto}"></option>`)
       .join('');
+    document.getElementById('movProductoInput').value = '';
+    document.getElementById('movProducto').value = '';
     document.getElementById('movCantidad').value = 1;
     document.getElementById('movObservaciones').value = '';
     document.getElementById('modalMovimiento').classList.add('active');
+
+    // Resolver id al escribir / seleccionar
+    const input = document.getElementById('movProductoInput');
+    input.oninput = () => {
+      const val = input.value.trim().toLowerCase();
+      const match = cache.productos.find(p =>
+        `${p.nombre} (${p.sku || 'sin SKU'})`.toLowerCase() === val ||
+        (p.nombre || '').toLowerCase() === val ||
+        (p.sku || '').toLowerCase() === val
+      );
+      document.getElementById('movProducto').value = match ? match.idProducto : '';
+    };
   } catch (e) { showError(e); }
 }
 
 async function guardarMovimiento() {
   const tipo = document.getElementById('movTipo').value;
+  // Asegurar que el id esté resuelto por si el usuario no disparó oninput
+  const inputVal = (document.getElementById('movProductoInput')?.value || '').trim().toLowerCase();
+  if (inputVal && !document.getElementById('movProducto').value) {
+    const match = cache.productos.find(p =>
+      `${p.nombre} (${p.sku || 'sin SKU'})`.toLowerCase() === inputVal ||
+      (p.nombre || '').toLowerCase() === inputVal ||
+      (p.sku || '').toLowerCase() === inputVal
+    );
+    if (match) document.getElementById('movProducto').value = match.idProducto;
+  }
   const idProducto = Number(document.getElementById('movProducto').value);
   const cantidad = Number(document.getElementById('movCantidad').value);
   const obs = document.getElementById('movObservaciones').value.trim();   //  Solo lo que escribe el usuario
 
   if (!idProducto || !Number.isInteger(cantidad) || cantidad < 1) {
-    alert('Selecciona un producto e indica una cantidad entera mayor que cero.');
+    alert('Escribe el nombre o SKU de un producto válido e indica una cantidad entera mayor que cero.');
     return;
   }
 
@@ -514,9 +569,9 @@ async function renderPedidos() {
         <td>${esc(p.observaciones || '—')}</td>
         <td class="actions">
           ${p.estado === 'Enviado'
-        ? `<button class="btn-icon btn-success" title="Marcar como Entregado" onclick="confirmarEntregaPorIA(${p.idPedido})">🤖 Entregar</button>`
+        ? `<button class="btn-icon btn-success" title="Marcar como Entregado" onclick="confirmarEntregaPorIA(${p.idPedido})">Entregar</button>`
         : ''}
-  <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})">🖨️</button>
+  <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})"><i class="fi fi-rr-print"></i></button>
   ${botonEliminarAdmin(`eliminarPedido(${p.idPedido})`)}
 </td>
       </tr>`).join('')
@@ -646,6 +701,10 @@ async function generarReporte() {
   const titulo = document.getElementById('tituloReporte');
   const total = document.getElementById('totalRegistros');
 
+  const fechaDesde = document.getElementById('fechaDesde')?.value || '';
+  const fechaHasta = document.getElementById('fechaHasta')?.value || '';
+  const filtroEstado = document.getElementById('estadoPedido')?.value || '';
+
   let htmlHead = '';
   let htmlBody = '';
   let datos = [];
@@ -700,7 +759,93 @@ async function generarReporte() {
     }).join('');
   }
 
-  // Puedes seguir agregando los demás reportes (movimientos, pedidos, clientes)...
+  else if (tipo === 'movimientos') {
+    titulo.textContent = 'Movimientos de inventario';
+    htmlHead = `<tr>
+      <th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Observaciones</th>
+    </tr>`;
+
+    datos = (cache.movimientos || []).filter(m => {
+      if (!m.fechaMovimiento) return false;
+      const f = new Date(m.fechaMovimiento);
+      if (fechaDesde) {
+        const d = new Date(fechaDesde);
+        if (f < d) return false;
+      }
+      if (fechaHasta) {
+        const h = new Date(fechaHasta);
+        h.setHours(23, 59, 59, 999);
+        if (f > h) return false;
+      }
+      return true;
+    }).sort((a, b) => new Date(b.fechaMovimiento) - new Date(a.fechaMovimiento));
+
+    htmlBody = datos.map(m => {
+      const p = byId(cache.productos, 'idProducto', m.idProducto);
+      return `<tr>
+        <td>${date(m.fechaMovimiento)}</td>
+        <td>${esc(m.tipoMovimiento || '—')}</td>
+        <td>${esc(p?.nombre || '—')}</td>
+        <td>${m.cantidad ?? '—'}</td>
+        <td>${esc(m.observaciones || '—')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  else if (tipo === 'pedidos') {
+    titulo.textContent = 'Pedidos';
+    htmlHead = `<tr>
+      <th>ID</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Estado</th><th>Observaciones</th>
+    </tr>`;
+
+    datos = (cache.pedidos || []).filter(p => {
+      if (filtroEstado && p.estado !== filtroEstado) return false;
+      if (!p.fechaPedido) return true;
+      const f = new Date(p.fechaPedido);
+      if (fechaDesde) {
+        const d = new Date(fechaDesde);
+        if (f < d) return false;
+      }
+      if (fechaHasta) {
+        const h = new Date(fechaHasta);
+        h.setHours(23, 59, 59, 999);
+        if (f > h) return false;
+      }
+      return true;
+    }).sort((a, b) => new Date(b.fechaPedido) - new Date(a.fechaPedido));
+
+    htmlBody = datos.map(p => {
+      const c = byId(cache.clientes, 'idCliente', p.idCliente);
+      return `<tr>
+        <td>#${p.idPedido}</td>
+        <td>${esc(c?.nombre || `Cliente #${p.idCliente}`)}</td>
+        <td>${date(p.fechaPedido)}</td>
+        <td>${money(p.total)}</td>
+        <td>${esc(p.estado || '—')}</td>
+        <td>${esc(p.observaciones || '—')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  else if (tipo === 'clientes') {
+    titulo.textContent = 'Clientes';
+    htmlHead = `<tr>
+      <th>ID</th><th>Nombre</th><th>Negocio</th><th>Correo</th><th>Teléfono</th><th>Dirección</th><th>Tipo</th>
+    </tr>`;
+
+    datos = cache.clientes || [];
+
+    htmlBody = datos.map(c => `
+      <tr>
+        <td>${String(c.idCliente).padStart(4, '0')}</td>
+        <td>${esc(c.nombre || '')}</td>
+        <td>${esc(c.negocio || '—')}</td>
+        <td>${esc(c.correo || '')}</td>
+        <td>${esc(c.telefono || '')}</td>
+        <td>${esc(c.direccion || '')}</td>
+        <td>${c.categoria == 1 ? 'Mayorista' : c.categoria == 2 ? 'Menudista' : '—'}</td>
+      </tr>`).join('');
+  }
 
   thead.innerHTML = htmlHead;
   tbody.innerHTML = htmlBody || `<tr><td colspan="10" style="text-align:center">No hay datos</td></tr>`;
@@ -708,7 +853,39 @@ async function generarReporte() {
 }
 
 function exportarExcel() {
-  alert('Función de exportar a Excel (la implementamos después)');
+  const thead = document.getElementById('theadReporte');
+  const tbody = document.getElementById('tbodyReporte');
+  const titulo = document.getElementById('tituloReporte')?.textContent || 'Reporte';
+
+  if (!thead || !tbody || tbody.querySelector('td[colspan]')) {
+    alert('Primero genera un reporte para poder exportarlo.');
+    return;
+  }
+
+  const filas = [];
+  // Encabezados
+  const ths = Array.from(thead.querySelectorAll('th')).map(th => `"${th.textContent.trim().replace(/"/g, '""')}"`);
+  filas.push(ths.join(','));
+
+  // Datos
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const celdas = Array.from(tr.querySelectorAll('td')).map(td => {
+      let texto = td.textContent.trim().replace(/"/g, '""');
+      return `"${texto}"`;
+    });
+    if (celdas.length) filas.push(celdas.join(','));
+  });
+
+  const csv = '\uFEFF' + filas.join('\n'); // BOM para Excel en español
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${titulo.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 async function generarReporteDelDia() {
@@ -827,7 +1004,7 @@ async function renderClientes() {
   }
 
   const texto = (document.getElementById('searchCliente')?.value || '').toLowerCase().trim();
-  const filtroCat = document.getElementById('filtroCategoria')?.value || '';
+  const filtroTipo = document.getElementById('filtroTipoCliente')?.value || '';
 
   const lista = cache.clientes.filter(c => {
     const idFormateado = String(c.idCliente).padStart(4, '0');   // ← 0001, 0002...
@@ -836,8 +1013,8 @@ async function renderClientes() {
       `${c.idCliente || ''} ${idFormateado} ${c.nombre || ''} ${c.negocio || ''} ${c.correo || ''}`
     ).toLowerCase().includes(texto);
 
-    const coincideCat = !filtroCat || String(c.categoria) === String(filtroCat);
-    return coincideTexto && coincideCat;
+    const coincideTipo = !filtroTipo || String(c.categoria) === String(filtroTipo);
+    return coincideTexto && coincideTipo;
   });
 
   const tbody = document.getElementById('tablaclientes');
@@ -1003,7 +1180,8 @@ function cerrarModal(id) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('searchProductos')?.addEventListener('input', () => renderProductos().catch(showError));
   document.getElementById('searchCliente')?.addEventListener('input', () => renderClientes().catch(showError));
-  document.getElementById('filtroCategoria')?.addEventListener('change', () => renderClientes().catch(showError));
+  document.getElementById('filtroTipoCliente')?.addEventListener('change', () => renderClientes().catch(showError));
+  document.getElementById('filtroCategoria')?.addEventListener('change', () => renderProductos().catch(showError));
 
   // Restaurar sesión si existe
   const guardado = localStorage.getItem('usuario');

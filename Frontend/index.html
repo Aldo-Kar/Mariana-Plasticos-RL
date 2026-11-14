@@ -206,7 +206,7 @@
           <div class="table-header">
             <div class="search-box" style="width:320px;">
               <i class="fi fi-rr-search"></i>
-              <input type="text" id="searchProductos" placeholder="Buscar por nombre o SKU..."
+              <input type="text" id="searchProductos" placeholder="Buscar por nombre, SKU o marca..."
                 oninput="renderProductos()">
             </div>
             <select id="filtroCategoria" onchange="renderProductos()"
@@ -215,6 +215,7 @@
               <option value="1">Envases</option>
               <option value="2">Bolsas</option>
               <option value="3">Desechables</option>
+              <option value="4">Accesorios</option>
             </select>
           </div>
           <table>
@@ -402,13 +403,13 @@
           <div class="table-header">
             <div class="search-box" style="width:320px;">
               <i class="fi fi-rr-search"></i>
-              <input type="text" id="searchCliente" placeholder="Buscar por nombre o id" oninput="renderCliente()">
+              <input type="text" id="searchCliente" placeholder="Buscar por nombre, negocio o id" oninput="renderClientes()">
             </div>
-            <select id="filtroCategoria" onchange="renderCliente()"
+            <select id="filtroTipoCliente" onchange="renderClientes()"
               style="padding:0.5rem 1rem;border-radius:8px;border:1.5px solid #d1d5db;">
               <option value="">Todos los clientes</option>
-              <option value="1">mayoristas</option>
-              <option value="2">menudistas</option>
+              <option value="1">Mayoristas</option>
+              <option value="2">Menudistas</option>
             </select>
           </div>
           <table>
@@ -533,8 +534,10 @@
       <div class="modal-body">
         <input type="hidden" id="invId">
         <div class="form-group">
-          <label>Producto</label>
-          <select id="invProducto"></select>
+          <label>Producto (escribe nombre o SKU)</label>
+          <input type="text" id="invProductoInput" list="listaProductosInv" placeholder="Escribe nombre o SKU del producto..." autocomplete="off">
+          <datalist id="listaProductosInv"></datalist>
+          <input type="hidden" id="invProducto">
         </div>
         <div class="form-group">
           <label>Cantidad actual</label>
@@ -562,8 +565,10 @@
       <div class="modal-body">
         <input type="hidden" id="movTipo">
         <div class="form-group">
-          <label>Producto</label>
-          <select id="movProducto"></select>
+          <label>Producto (escribe nombre o SKU)</label>
+          <input type="text" id="movProductoInput" list="listaProductosMov" placeholder="Escribe nombre o SKU del producto..." autocomplete="off">
+          <datalist id="listaProductosMov"></datalist>
+          <input type="hidden" id="movProducto">
         </div>
         <div class="form-group">
           <label>Cantidad</label>
