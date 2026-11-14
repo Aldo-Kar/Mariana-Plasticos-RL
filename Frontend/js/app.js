@@ -172,7 +172,7 @@ async function renderProductos() {
 
   document.getElementById('tablaProductos').innerHTML = lista.length
     ? lista.map(p => {
-      const stock = stockReal(p.idProducto);   // ✅ Stock tomado del Inventario
+      const stock = stockReal(p.idProducto);   //  Stock tomado del Inventario
       return `<tr>
           <td><strong>${esc(p.nombre)}</strong><br><small>${esc(p.sku || 'Sin SKU')}</small></td>
           <td>${esc(byId(cache.categorias, 'idCategoria', p.idCategoria)?.nombre || p.idCategoria || '—')}</td>
