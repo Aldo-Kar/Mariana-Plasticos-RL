@@ -613,55 +613,156 @@ function agregarLineaPedido(idProducto = '', cantidad = 1) {
 }
 
 function actualizarTotalPedidoVista() {
+  // Obtener todas las filas del pedido
   const filas = [...document.querySelectorAll('#pedLineas .pedido-linea')];
+  
+  // Calcular suma de cada fila: precio × cantidad
   const total = filas.reduce((suma, fila) => {
     const idProd = Number(fila.querySelector('.ped-linea-producto-id').value);
     const cantidad = Number(fila.querySelector('.ped-linea-cantidad').value) || 0;
+    
+    // Buscar el producto en caché para obtener su precio
     const producto = cache.productos.find(p => Number(p.idProducto) === idProd);
+    
+    // Sumar solo si hay producto válido
     return suma + (producto ? Number(producto.precioUnitario) * cantidad : 0);
   }, 0);
-  document.getElementById('pedTotalVista').value = money(total);
+
+  // Mostrar formateado como moneda mexicana ($0.00)
+  const elementoTotal = document.getElementById('pedTotalVista');
+  if (elementoTotal) {
+    elementoTotal.value = money(total);
+  }
 }
+
 
 
 async function abrirModalPedido() {
   await cargarDatos();
   document.getElementById('pedId').value = '';
   document.getElementById('modalPedidoTitle').textContent = 'Nuevo pedido';
-  document.getElementById('pedCliente').innerHTML = cache.clientes
-    .map(c => `<option value="${c.idCliente}">${esc(c.nombre)}</option>`).join('');
   document.getElementById('pedEstado').value = 'Pendiente';
   document.getElementById('pedObservaciones').value = '';
   document.getElementById('pedLineas').innerHTML = '';
   agregarLineaPedido();
+
+  // ✅ BÚSQUEDA DE CLIENTE — ahora se inicializa CADA VEZ que se abre el modal
+  const busquedaCliente = document.getElementById('pedCliente-busqueda');
+  const resultadosCliente = document.getElementById('pedCliente-resultados');
+  const inputIdCliente = document.getElementById('pedCliente');
+
+  if (busquedaCliente && resultadosCliente && inputIdCliente) {
+    // Limpiar todo al abrir el modal
+    busquedaCliente.value = '';
+    resultadosCliente.innerHTML = '';
+    inputIdCliente.value = '';
+
+    // Clonar el input para remover listeners antiguos y evitar duplicados
+    const nuevoInput = busquedaCliente.cloneNode(true);
+    busquedaCliente.parentNode.replaceChild(nuevoInput, busquedaCliente);
+
+    nuevoInput.addEventListener('input', () => {
+      const termino = nuevoInput.value.trim().toLowerCase();
+      resultadosCliente.innerHTML = '';
+
+      if (termino.length < 2 || !cache.clientes.length) return;
+
+      const clientesFiltrados = cache.clientes.filter(c => {
+        const idFormateado = String(c.idCliente).padStart(4, '0');
+        return (
+          (c.nombre && c.nombre.toLowerCase().includes(termino)) ||
+          idFormateado.includes(termino) ||
+          (c.negocio && c.negocio.toLowerCase().includes(termino))
+        );
+      });
+
+      if (clientesFiltrados.length === 0) {
+        resultadosCliente.innerHTML = `<div class="item-sugerencia">No se encontraron clientes</div>`;
+        return;
+      }
+
+      clientesFiltrados.forEach(cliente => {
+        const item = document.createElement('div');
+        item.className = 'item-sugerencia';
+        item.innerHTML = `
+          <strong>${esc(cliente.nombre)}</strong>
+          <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}${cliente.negocio ? ` · ${esc(cliente.negocio)}` : ''}</span>
+        `;
+        item.addEventListener('click', () => {
+          nuevoInput.value = cliente.nombre;
+          inputIdCliente.value = cliente.idCliente;
+          resultadosCliente.innerHTML = '';
+        });
+        resultadosCliente.appendChild(item);
+      });
+    });
+
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', function cerrarFuera(e) {
+      if (!nuevoInput.contains(e.target) && !resultadosCliente.contains(e.target)) {
+        resultadosCliente.innerHTML = '';
+        document.removeEventListener('click', cerrarFuera);
+      }
+    });
+  }
+
   document.getElementById('modalPedido').classList.add('active');
 }
 
 async function guardarPedido() {
-  const cliente = Number(document.getElementById('pedCliente').value);
+  // 1. Recuperar valores del formulario
+  const idCliente = Number(document.getElementById('pedCliente').value);
   const filas = [...document.querySelectorAll('#pedLineas .pedido-linea')];
-  const productos = filas.map(fila => ({
-    idProducto: Number(fila.querySelector('.ped-linea-producto-id').value), // ← SOLO CAMBIO AQUÍ
-    cantidad: Number(fila.querySelector('.ped-linea-cantidad').value)
-  }));
-  const estado = document.getElementById('pedEstado').value;
+  const estado = document.getElementById('pedEstado').value.trim();
   const observaciones = document.getElementById('pedObservaciones').value.trim();
 
-  if (!cliente) return alert('Selecciona un cliente.');
-  if (!productos.length || productos.some(x => !x.idProducto || !Number.isInteger(x.cantidad) || x.cantidad < 1))
-    return alert('Selecciona un producto y una cantidad válida en cada renglón.');
-  if (new Set(productos.map(x => x.idProducto)).size !== productos.length)
-    return alert('No repitas productos. Modifica la cantidad en el renglón existente.');
+  // 2. Construir lista de productos
+  const productos = filas.map((fila, indice) => {
+    const idProducto = Number(fila.querySelector('.ped-linea-producto-id').value);
+    const cantidad = Number(fila.querySelector('.ped-linea-cantidad').value);
+    return { idProducto, cantidad, fila: indice + 1 };
+  });
 
+  // 3. Validaciones
+  if (!idCliente || isNaN(idCliente)) {
+    return alert('⚠️ Selecciona un cliente de la lista antes de guardar.');
+  }
+
+  if (productos.length === 0) {
+    return alert('⚠️ Agrega al menos un producto al pedido.');
+  }
+
+  const filasInvalidas = productos.filter(p => !p.idProducto || !Number.isInteger(p.cantidad) || p.cantidad < 1);
+  if (filasInvalidas.length > 0) {
+    return alert(`⚠️ Revisa el renglón ${filasInvalidas.map(f => f.fila).join(', ')}:\nSelecciona un producto y usa una cantidad entera mayor a 0.`);
+  }
+
+  const idsProductos = productos.map(p => p.idProducto);
+  if (new Set(idsProductos).size !== productos.length) {
+    return alert('⚠️ No puedes repetir el mismo producto.\nModifica la cantidad en el renglón existente.');
+  }
+
+  // 4. Enviar al backend
   try {
-    await post('/pedidos', { idCliente: cliente, estado, observaciones: observaciones || null, productos });
+    await post('/pedidos', {
+      idCliente,
+      estado,
+      observaciones: observaciones || null,
+      productos: productos.map(({ idProducto, cantidad }) => ({ idProducto, cantidad }))
+    });
+
     cerrarModal('modalPedido');
     await cargarDatos();
     await renderPedidos();
     await renderDashboard();
-    alert('Pedido con varios productos guardado correctamente.');
-  } catch (e) { showError(e); }
+    alert('✅ Pedido guardado correctamente.');
+
+  } catch (error) {
+    console.error('Error al guardar el pedido:', error);
+    showError(error);
+  }
 }
+
 
 
 async function imprimirReportePedido(id) {
@@ -1297,47 +1398,6 @@ async function confirmarEntregaPorIA(idPedido, motivo = "Confirmado automáticam
   }
 }
 
-// ========== BÚSQUEDA DE CLIENTE POR NOMBRE O CÓDIGO ==========
-const busquedaCliente = document.getElementById('pedCliente-busqueda');
-const resultadosCliente = document.getElementById('pedCliente-resultados');
-const inputIdCliente = document.getElementById('pedCliente');
-
-if (busquedaCliente) {
-  busquedaCliente.addEventListener('input', () => {
-    const termino = busquedaCliente.value.trim().toLowerCase();
-    resultadosCliente.innerHTML = '';
-    
-    if (termino.length < 2 || !cache.clientes.length) return;
-
-    const clientesFiltrados = cache.clientes.filter(c => 
-      (c.nombre && c.nombre.toLowerCase().includes(termino)) ||
-      String(c.idCliente).padStart(4, '0').includes(termino) ||
-      (c.negocio && c.negocio.toLowerCase().includes(termino))
-    );
-
-    clientesFiltrados.forEach(cliente => {
-      const item = document.createElement('div');
-      item.className = 'item-sugerencia';
-      item.innerHTML = `
-        <strong>${esc(cliente.nombre)}</strong>
-        <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}${cliente.negocio ? ` · ${esc(cliente.negocio)}` : ''}</span>
-      `;
-      item.addEventListener('click', () => {
-        busquedaCliente.value = cliente.nombre;
-        inputIdCliente.value = cliente.idCliente;
-        resultadosCliente.innerHTML = '';
-      });
-      resultadosCliente.appendChild(item);
-    });
-  });
-
-  document.addEventListener('click', e => {
-    if (!busquedaCliente.contains(e.target) && !resultadosCliente.contains(e.target)) {
-      resultadosCliente.innerHTML = '';
-    }
-  });
-}
-
 // ========== BÚSQUEDA DE PRODUCTOS EN LÍNEAS DE PEDIDO ==========
 function inicializarBusquedaProducto(contenedor, idSeleccionado = '') {
   const inputBuscar = contenedor.querySelector('.ped-linea-producto-buscar');
@@ -1386,4 +1446,9 @@ function inicializarBusquedaProducto(contenedor, idSeleccionado = '') {
   document.addEventListener('click', e => {
     if (!contenedor.contains(e.target)) resultados.innerHTML = '';
   });
+}
+
+// ========== FUNCIONES AUXILIARES FALTANTES ==========
+function cerrarModal(id) {
+  document.getElementById(id)?.classList.remove('active');
 }
