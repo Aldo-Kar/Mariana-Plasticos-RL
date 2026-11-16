@@ -635,8 +635,6 @@ function actualizarTotalPedidoVista() {
   }
 }
 
-
-
 async function abrirModalPedido() {
   await cargarDatos();
   document.getElementById('pedId').value = '';
@@ -646,7 +644,7 @@ async function abrirModalPedido() {
   document.getElementById('pedLineas').innerHTML = '';
   agregarLineaPedido();
 
-  // ✅ BÚSQUEDA DE CLIENTE — ahora se inicializa CADA VEZ que se abre el modal
+  // BÚSQUEDA DE CLIENTE
   const busquedaCliente = document.getElementById('pedCliente-busqueda');
   const resultadosCliente = document.getElementById('pedCliente-resultados');
   const inputIdCliente = document.getElementById('pedCliente');
@@ -657,7 +655,7 @@ async function abrirModalPedido() {
     resultadosCliente.innerHTML = '';
     inputIdCliente.value = '';
 
-    // Clonar el input para remover listeners antiguos y evitar duplicados
+    // Clonar el input para remover listeners antiguos
     const nuevoInput = busquedaCliente.cloneNode(true);
     busquedaCliente.parentNode.replaceChild(nuevoInput, busquedaCliente);
 
@@ -670,9 +668,9 @@ async function abrirModalPedido() {
       const clientesFiltrados = cache.clientes.filter(c => {
         const idFormateado = String(c.idCliente).padStart(4, '0');
         return (
-          (c.nombre && c.nombre.toLowerCase().includes(termino)) ||
           idFormateado.includes(termino) ||
-          (c.negocio && c.negocio.toLowerCase().includes(termino))
+          (c.negocio && c.negocio.toLowerCase().includes(termino)) ||
+          (c.correo && c.correo.toLowerCase().includes(termino))
         );
       });
 
@@ -684,12 +682,15 @@ async function abrirModalPedido() {
       clientesFiltrados.forEach(cliente => {
         const item = document.createElement('div');
         item.className = 'item-sugerencia';
+        // ✅ Mostramos el nombre del negocio como etiqueta principal
+        const etiquetaPrincipal = cliente.negocio || `Cliente #${cliente.idCliente}`;
         item.innerHTML = `
-          <strong>${esc(cliente.nombre)}</strong>
-          <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}${cliente.negocio ? ` · ${esc(cliente.negocio)}` : ''}</span>
+          <strong>${esc(etiquetaPrincipal)}</strong>
+          <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}</span>
         `;
         item.addEventListener('click', () => {
-          nuevoInput.value = cliente.nombre;
+          // Al seleccionar, mostramos el negocio en el campo de búsqueda
+          nuevoInput.value = etiquetaPrincipal;
           inputIdCliente.value = cliente.idCliente;
           resultadosCliente.innerHTML = '';
         });
@@ -709,6 +710,7 @@ async function abrirModalPedido() {
   document.getElementById('modalPedido').classList.add('active');
 }
 
+
 async function guardarPedido() {
   // 1. Recuperar valores del formulario
   const idCliente = Number(document.getElementById('pedCliente').value);
@@ -725,21 +727,21 @@ async function guardarPedido() {
 
   // 3. Validaciones
   if (!idCliente || isNaN(idCliente)) {
-    return alert('⚠️ Selecciona un cliente de la lista antes de guardar.');
+    return alert('Selecciona un cliente de la lista antes de guardar.');
   }
 
   if (productos.length === 0) {
-    return alert('⚠️ Agrega al menos un producto al pedido.');
+    return alert('Agrega al menos un producto al pedido.');
   }
 
   const filasInvalidas = productos.filter(p => !p.idProducto || !Number.isInteger(p.cantidad) || p.cantidad < 1);
   if (filasInvalidas.length > 0) {
-    return alert(`⚠️ Revisa el renglón ${filasInvalidas.map(f => f.fila).join(', ')}:\nSelecciona un producto y usa una cantidad entera mayor a 0.`);
+    return alert(`Revisa el renglón ${filasInvalidas.map(f => f.fila).join(', ')}:\nSelecciona un producto y usa una cantidad entera mayor a 0.`);
   }
 
   const idsProductos = productos.map(p => p.idProducto);
   if (new Set(idsProductos).size !== productos.length) {
-    return alert('⚠️ No puedes repetir el mismo producto.\nModifica la cantidad en el renglón existente.');
+    return alert('No puedes repetir el mismo producto.\nModifica la cantidad en el renglón existente.');
   }
 
   // 4. Enviar al backend
