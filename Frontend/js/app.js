@@ -65,7 +65,6 @@ async function login() {
     document.getElementById('app').style.display = 'block';
 
     pintarUsuario();
-    await cargarDatos();
     await mostrarPagina('dashboard');
 
   } catch (e) {
