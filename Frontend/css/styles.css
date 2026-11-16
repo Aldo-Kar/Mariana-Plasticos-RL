@@ -810,3 +810,61 @@ tr:hover td {
 .btn-entregar-ia:hover {
     background: #059669;
 }
+
+.campo-busqueda-inline {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.campo-busqueda-inline input[type="text"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.lista-sugerencias {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 200;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.item-sugerencia {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.item-sugerencia:hover {
+  background: #eaf4ff;
+}
+
+.sku {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.pedido-linea {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pedido-linea input[type="number"] {
+  width: 75px;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

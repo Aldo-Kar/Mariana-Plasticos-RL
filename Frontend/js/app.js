@@ -584,30 +584,45 @@ function agregarLineaPedido(idProducto = '', cantidad = 1) {
   const fila = document.createElement('div');
   fila.className = 'pedido-linea';
   fila.innerHTML = `
-    <select class="ped-linea-producto" aria-label="Producto">${opcionesProductosPedido()}</select>
+    <div class="campo-busqueda-inline">
+      <input 
+        type="text" 
+        class="ped-linea-producto-buscar" 
+        placeholder="Escribe nombre o SKU..."
+        autocomplete="off"
+      >
+      <div class="lista-sugerencias"></div>
+      <input type="hidden" class="ped-linea-producto-id" value="${idProducto}">
+    </div>
     <input class="ped-linea-cantidad" type="number" min="1" step="1" value="${Number(cantidad) || 1}" aria-label="Cantidad">
     <button type="button" class="btn-icon danger" title="Quitar producto" aria-label="Quitar producto">✕</button>`;
-  fila.querySelector('.ped-linea-producto').value = idProducto;
-  fila.querySelector('.ped-linea-producto').addEventListener('change', actualizarTotalPedidoVista);
+
   fila.querySelector('.ped-linea-cantidad').addEventListener('input', actualizarTotalPedidoVista);
   fila.querySelector('button').addEventListener('click', () => {
     fila.remove();
     if (!contenedor.children.length) agregarLineaPedido();
     actualizarTotalPedidoVista();
   });
+
   contenedor.appendChild(fila);
+
+  // Inicializar búsqueda en esta fila
+  inicializarBusquedaProducto(fila.querySelector('.campo-busqueda-inline'), idProducto);
+
   actualizarTotalPedidoVista();
 }
 
 function actualizarTotalPedidoVista() {
   const filas = [...document.querySelectorAll('#pedLineas .pedido-linea')];
   const total = filas.reduce((suma, fila) => {
-    const producto = byId(cache.productos, 'idProducto', fila.querySelector('.ped-linea-producto').value);
+    const idProd = Number(fila.querySelector('.ped-linea-producto-id').value);
     const cantidad = Number(fila.querySelector('.ped-linea-cantidad').value) || 0;
-    return suma + (Number(producto?.precioUnitario) || 0) * cantidad;
+    const producto = cache.productos.find(p => Number(p.idProducto) === idProd);
+    return suma + (producto ? Number(producto.precioUnitario) * cantidad : 0);
   }, 0);
   document.getElementById('pedTotalVista').value = money(total);
 }
+
 
 async function abrirModalPedido() {
   await cargarDatos();
@@ -626,7 +641,7 @@ async function guardarPedido() {
   const cliente = Number(document.getElementById('pedCliente').value);
   const filas = [...document.querySelectorAll('#pedLineas .pedido-linea')];
   const productos = filas.map(fila => ({
-    idProducto: Number(fila.querySelector('.ped-linea-producto').value),
+    idProducto: Number(fila.querySelector('.ped-linea-producto-id').value), // ← SOLO CAMBIO AQUÍ
     cantidad: Number(fila.querySelector('.ped-linea-cantidad').value)
   }));
   const estado = document.getElementById('pedEstado').value;
@@ -647,6 +662,7 @@ async function guardarPedido() {
     alert('Pedido con varios productos guardado correctamente.');
   } catch (e) { showError(e); }
 }
+
 
 async function imprimirReportePedido(id) {
   try {
@@ -1279,4 +1295,95 @@ async function confirmarEntregaPorIA(idPedido, motivo = "Confirmado automáticam
     alert('Error de conexión con el servidor. Verifica que el backend esté activo.');
     return false;
   }
+}
+
+// ========== BÚSQUEDA DE CLIENTE POR NOMBRE O CÓDIGO ==========
+const busquedaCliente = document.getElementById('pedCliente-busqueda');
+const resultadosCliente = document.getElementById('pedCliente-resultados');
+const inputIdCliente = document.getElementById('pedCliente');
+
+if (busquedaCliente) {
+  busquedaCliente.addEventListener('input', () => {
+    const termino = busquedaCliente.value.trim().toLowerCase();
+    resultadosCliente.innerHTML = '';
+    
+    if (termino.length < 2 || !cache.clientes.length) return;
+
+    const clientesFiltrados = cache.clientes.filter(c => 
+      (c.nombre && c.nombre.toLowerCase().includes(termino)) ||
+      String(c.idCliente).padStart(4, '0').includes(termino) ||
+      (c.negocio && c.negocio.toLowerCase().includes(termino))
+    );
+
+    clientesFiltrados.forEach(cliente => {
+      const item = document.createElement('div');
+      item.className = 'item-sugerencia';
+      item.innerHTML = `
+        <strong>${esc(cliente.nombre)}</strong>
+        <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}${cliente.negocio ? ` · ${esc(cliente.negocio)}` : ''}</span>
+      `;
+      item.addEventListener('click', () => {
+        busquedaCliente.value = cliente.nombre;
+        inputIdCliente.value = cliente.idCliente;
+        resultadosCliente.innerHTML = '';
+      });
+      resultadosCliente.appendChild(item);
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!busquedaCliente.contains(e.target) && !resultadosCliente.contains(e.target)) {
+      resultadosCliente.innerHTML = '';
+    }
+  });
+}
+
+// ========== BÚSQUEDA DE PRODUCTOS EN LÍNEAS DE PEDIDO ==========
+function inicializarBusquedaProducto(contenedor, idSeleccionado = '') {
+  const inputBuscar = contenedor.querySelector('.ped-linea-producto-buscar');
+  const resultados = contenedor.querySelector('.lista-sugerencias');
+  const inputId = contenedor.querySelector('.ped-linea-producto-id');
+
+  // Si viene un ID precargado, mostrar el nombre del producto
+  if (idSeleccionado && cache.productos.length) {
+    const producto = cache.productos.find(p => String(p.idProducto) === String(idSeleccionado));
+    if (producto) {
+      inputBuscar.value = producto.nombre;
+      inputId.value = producto.idProducto;
+    }
+  }
+
+  // Buscar mientras escribe
+  inputBuscar.addEventListener('input', () => {
+    const termino = inputBuscar.value.trim().toLowerCase();
+    resultados.innerHTML = '';
+
+    if (termino.length < 2 || !cache.productos.length) return;
+
+    const coinciden = cache.productos.filter(p =>
+      (p.nombre && p.nombre.toLowerCase().includes(termino)) ||
+      (p.sku && p.sku.toLowerCase().includes(termino))
+    );
+
+    coinciden.forEach(producto => {
+      const opcion = document.createElement('div');
+      opcion.className = 'item-sugerencia';
+      opcion.innerHTML = `
+        <strong>${producto.nombre}</strong><br>
+        <span class="sku">${producto.sku || 'SIN-SKU'}</span> — $${(producto.precioUnitario || 0).toFixed(2)}
+      `;
+      opcion.addEventListener('click', () => {
+        inputBuscar.value = producto.nombre;
+        inputId.value = producto.idProducto;
+        resultados.innerHTML = '';
+        actualizarTotalPedidoVista();
+      });
+      resultados.appendChild(opcion);
+    });
+  });
+
+  // Cerrar lista al hacer clic fuera
+  document.addEventListener('click', e => {
+    if (!contenedor.contains(e.target)) resultados.innerHTML = '';
+  });
 }
