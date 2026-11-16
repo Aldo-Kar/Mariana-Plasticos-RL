@@ -554,7 +554,7 @@ async function renderPedidos() {
   cache.pedidos = pedidos;
   cache.clientes = clientes;
 
-  // 🤖 Secuencia completa de estados que la IA avanza automáticamente
+  //Secuencia completa de estados
   const secuenciaIA = {
     'Pendiente': 'En preparación',
     'En preparación': 'Enviado',
@@ -575,7 +575,7 @@ async function renderPedidos() {
           <td>${esc(p.observaciones || '—')}</td>
           <td class="actions">
             ${puedeAvanzar
-              ? `<button class="btn-icon btn-success" title="IA: Pasar a ${siguienteEstado}" onclick="iaAvanzarPedido(${p.idPedido}, '${p.estado}', '${siguienteEstado}')">✅</button>`
+              ? `<button class="btn-icon btn-success" title="IA: Pasar a ${siguienteEstado}" onclick="iaAvanzarPedido(${p.idPedido}, '${p.estado}', '${siguienteEstado}')">ENV</button>`
               : ''}
             <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})"><i class="fi fi-rr-print"></i></button>
             ${botonEliminarAdmin(`eliminarPedido(${p.idPedido})`)}
@@ -584,7 +584,6 @@ async function renderPedidos() {
       }).join('')
     : '<tr><td colspan="7" style="text-align:center">No hay pedidos registrados</td></tr>';
 }
-
 
 
 function opcionesProductosPedido() {
@@ -1481,17 +1480,17 @@ async function iaAvanzarPedido(idPedido, estadoActual, estadoSiguiente) {
       observaciones: `IA: Confirmado automáticamente — pasó de "${estadoActual}" a "${estadoSiguiente}"`
     });
     
-    alert(`✅ Pedido #${idPedido} actualizado a: ${estadoSiguiente}`);
+    alert(`Pedido #${idPedido} actualizado a: ${estadoSiguiente}`);
     await cargarPedidos(); // Refrescar tabla
   } catch (error) {
     alert(`Error: ${error.message}`);
   }
 }
 
-// Función de automatización de estados por IA
+//Función de automatización de estados por IA — CORREGIDA
 async function iaAvanzarPedido(idPedido, estadoActual, estadoSiguiente) {
   const confirmar = confirm(
-    `🤖 Asistente IA\n\n` +
+    `Asistente IA\n\n` +
     `Pedido #${idPedido}\n` +
     `Estado actual: ${estadoActual}\n` +
     `→ Cambiar a: ${estadoSiguiente}\n\n` +
@@ -1501,30 +1500,23 @@ async function iaAvanzarPedido(idPedido, estadoActual, estadoSiguiente) {
   if (!confirmar) return;
 
   try {
-    // Llamar al endpoint que avanza el estado en el backend
-    const respuesta = await fetch(
-      `${API_BASE}/pedidos/${idPedido}/cambiar-estado`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          estadoNuevo: estadoSiguiente,
-          observacion: `IA: Cambiado automáticamente de "${estadoActual}" a "${estadoSiguiente}"`
-        })
-      }
-    );
-
-    const datos = await respuesta.json().catch(() => ({}));
-    
-    if (respuesta.ok && datos.success !== false) {
-      alert(`Pedido #${idPedido} → ${estadoSiguiente}`);
-      await cargarDatos();
-      await renderPedidos();
-    } else {
-      alert(`${datos.message || 'No se pudo actualizar el estado'}`);
+    //Si va a Entregado → usamos la ruta que ya funciona
+    if (estadoSiguiente === 'Entregado') {
+      return await confirmarEntregaPorIA(idPedido, `IA: Cambiado automáticamente de "${estadoActual}" a "${estadoSiguiente}"`);
     }
+
+    //Para los demás estados → usamos PUT /pedidos/{id} que ya existe
+    const respuesta = await put(`/pedidos/${idPedido}`, {
+      estado: estadoSiguiente,
+      observaciones: `IA: Cambiado automáticamente de "${estadoActual}" a "${estadoSiguiente}"`
+    });
+
+    alert(`Pedido #${idPedido} → ${estadoSiguiente}`);
+    await cargarDatos();
+    await renderPedidos();
+    
   } catch (error) {
     console.error('Error:', error);
-    alert('Error al conectar con el servidor. Intenta de nuevo.');
+    alert(`No se pudo actualizar el estado.\nVerifica que el servidor esté activo.`);
   }
 }
