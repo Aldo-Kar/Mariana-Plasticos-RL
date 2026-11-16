@@ -644,72 +644,67 @@ async function abrirModalPedido() {
   document.getElementById('pedLineas').innerHTML = '';
   agregarLineaPedido();
 
-  // BÚSQUEDA DE CLIENTE
-  const busquedaCliente = document.getElementById('pedCliente-busqueda');
-  const resultadosCliente = document.getElementById('pedCliente-resultados');
+  // Elementos
+  const inputBusqueda = document.getElementById('pedCliente-busqueda');
+  const divResultados = document.getElementById('pedCliente-resultados');
   const inputIdCliente = document.getElementById('pedCliente');
 
-  if (busquedaCliente && resultadosCliente && inputIdCliente) {
-    // Limpiar todo al abrir el modal
-    busquedaCliente.value = '';
-    resultadosCliente.innerHTML = '';
-    inputIdCliente.value = '';
+  // Limpiar
+  inputBusqueda.value = '';
+  divResultados.innerHTML = '';
+  inputIdCliente.value = '';
 
-    // Clonar el input para remover listeners antiguos
-    const nuevoInput = busquedaCliente.cloneNode(true);
-    busquedaCliente.parentNode.replaceChild(nuevoInput, busquedaCliente);
+  // ✅ ESCUCHAR LO QUE ESCRIBES — SIN clonar
+  inputBusqueda.oninput = function () {
+    const termino = this.value.trim().toLowerCase();
+    divResultados.innerHTML = '';
 
-    nuevoInput.addEventListener('input', () => {
-      const termino = nuevoInput.value.trim().toLowerCase();
-      resultadosCliente.innerHTML = '';
+    if (termino.length < 1 || !cache.clientes.length) return;
 
-      if (termino.length < 2 || !cache.clientes.length) return;
-
-      const clientesFiltrados = cache.clientes.filter(c => {
-        const idFormateado = String(c.idCliente).padStart(4, '0');
-        return (
-          idFormateado.includes(termino) ||
-          (c.negocio && c.negocio.toLowerCase().includes(termino)) ||
-          (c.correo && c.correo.toLowerCase().includes(termino))
-        );
-      });
-
-      if (clientesFiltrados.length === 0) {
-        resultadosCliente.innerHTML = `<div class="item-sugerencia">No se encontraron clientes</div>`;
-        return;
-      }
-
-      clientesFiltrados.forEach(cliente => {
-        const item = document.createElement('div');
-        item.className = 'item-sugerencia';
-        // ✅ Mostramos el nombre del negocio como etiqueta principal
-        const etiquetaPrincipal = cliente.negocio || `Cliente #${cliente.idCliente}`;
-        item.innerHTML = `
-          <strong>${esc(etiquetaPrincipal)}</strong>
-          <br><span class="sku">#${String(cliente.idCliente).padStart(4, '0')}</span>
-        `;
-        item.addEventListener('click', () => {
-          // Al seleccionar, mostramos el negocio en el campo de búsqueda
-          nuevoInput.value = etiquetaPrincipal;
-          inputIdCliente.value = cliente.idCliente;
-          resultadosCliente.innerHTML = '';
-        });
-        resultadosCliente.appendChild(item);
-      });
+    // Filtrar clientes
+    const resultados = cache.clientes.filter(c => {
+      const idTexto = String(c.idCliente);
+      const idFormateado = idTexto.padStart(5, '0');
+      return (
+        (c.nombre && c.nombre.toLowerCase().includes(termino)) ||
+        (c.negocio && c.negocio.toLowerCase().includes(termino)) ||
+        idTexto.includes(termino) ||
+        idFormateado.includes(termino)
+      );
     });
 
-    // Cerrar sugerencias al hacer clic fuera
-    document.addEventListener('click', function cerrarFuera(e) {
-      if (!nuevoInput.contains(e.target) && !resultadosCliente.contains(e.target)) {
-        resultadosCliente.innerHTML = '';
-        document.removeEventListener('click', cerrarFuera);
-      }
+    // Mostrar mensaje si no hay resultados
+    if (resultados.length === 0) {
+      divResultados.innerHTML = '<div class="item-sugerencia">No se encontraron clientes</div>';
+      return;
+    }
+
+    // Mostrar cada cliente
+    resultados.forEach(c => {
+      const opcion = document.createElement('div');
+      opcion.className = 'item-sugerencia';
+      opcion.innerHTML = `
+        <strong>${esc(c.nombre)}</strong>
+        <br><span>#${String(c.idCliente).padStart(5, '0')} · ${esc(c.negocio)}</span>
+      `;
+      opcion.onclick = function () {
+        inputBusqueda.value = c.nombre;
+        inputIdCliente.value = c.idCliente;
+        divResultados.innerHTML = '';
+      };
+      divResultados.appendChild(opcion);
     });
-  }
+  };
+
+  // Cerrar al hacer clic fuera
+  document.onclick = function (e) {
+    if (!inputBusqueda.contains(e.target) && !divResultados.contains(e.target)) {
+      divResultados.innerHTML = '';
+    }
+  };
 
   document.getElementById('modalPedido').classList.add('active');
 }
-
 
 async function guardarPedido() {
   // 1. Recuperar valores del formulario
