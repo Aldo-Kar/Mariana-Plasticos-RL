@@ -1,11 +1,4 @@
-/** Mariana Plásticos — Interfaz conectada al backend Spring Boot / MySQL
- *  Correcciones aplicadas:
- *  - Stock muestra stockActual (no stockMinimo)
- *  - Modal producto guarda stock actual
- *  - Observaciones limpias (sin "Producto #..." ni "cantidad:")
- *  - Movimientos muestran producto y cantidad correctamente
- *  - Mejor manejo de errores al eliminar
- */
+/** Mariana Plásticos — Interfaz conectada al backend Spring Boot / MySQL */
 
 const API_BASE = 'https://mariana-plasticos-backend.onrender.com/api';
 let usuarioActual = null;
@@ -57,21 +50,24 @@ async function login() {
   const correo = document.getElementById('loginEmail').value.trim();
   const contrasena = document.getElementById('loginPass').value;
   const errorEl = document.getElementById('loginError');
+
   if (!correo || !contrasena) {
     errorEl.textContent = 'Completa todos los campos';
     errorEl.style.display = 'block';
     return;
   }
+
   try {
     const u = await post('/auth/login', { correo, contrasena });
     usuarioActual = u;
-    localStorage.setItem('usuario', JSON.stringify(u));
     errorEl.style.display = 'none';
     document.getElementById('login').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+
     pintarUsuario();
     await cargarDatos();
     await mostrarPagina('dashboard');
+
   } catch (e) {
     errorEl.textContent = e.message || 'No se pudo conectar con el servidor';
     errorEl.style.display = 'block';
@@ -87,11 +83,11 @@ function pintarUsuario() {
 
 function logout() {
   usuarioActual = null;
-  localStorage.removeItem('usuario');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
 }
 
 async function mostrarPagina(id) {
@@ -1183,17 +1179,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('filtroTipoCliente')?.addEventListener('change', () => renderClientes().catch(showError));
   document.getElementById('filtroCategoria')?.addEventListener('change', () => renderProductos().catch(showError));
 
-  // Restaurar sesión si existe
-  const guardado = localStorage.getItem('usuario');
-  if (guardado) {
-    try {
-      usuarioActual = JSON.parse(guardado);
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      pintarUsuario();
-      cargarDatos().then(() => mostrarPagina('dashboard'));
-    } catch { }
-  }
+    // No conservar la sesión al cerrar o actualizar la aplicación
+  usuarioActual = null;
+  localStorage.removeItem('usuario');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
 });
 
 // Estado de ordenamiento por tabla
