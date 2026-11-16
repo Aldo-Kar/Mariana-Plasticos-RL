@@ -554,24 +554,37 @@ async function renderPedidos() {
   cache.pedidos = pedidos;
   cache.clientes = clientes;
 
+  // 🤖 Secuencia completa de estados que la IA avanza automáticamente
+  const secuenciaIA = {
+    'Pendiente': 'En preparación',
+    'En preparación': 'Enviado',
+    'Enviado': 'Entregado'
+  };
+
   document.getElementById('tablaPedidos').innerHTML = pedidos.length
-    ? pedidos.map(p => `<tr>
-        <td>#${p.idPedido}</td>
-        <td>${esc(byId(clientes, 'idCliente', p.idCliente)?.nombre || `Cliente #${p.idCliente}`)}</td>
-        <td>${date(p.fechaPedido)}</td>
-        <td>${money(p.total)}</td>
-        <td><span class="badge estado ${p.estado === 'Enviado' ? 'estado-enviado' : p.estado === 'Entregado' ? 'estado-entregado' : ''}">${esc(p.estado || '—')}</span></td>
-        <td>${esc(p.observaciones || '—')}</td>
-        <td class="actions">
-          ${p.estado === 'Enviado'
-        ? `<button class="btn-icon btn-success" title="Marcar como Entregado" onclick="confirmarEntregaPorIA(${p.idPedido})">Entregar</button>`
-        : ''}
-  <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})"><i class="fi fi-rr-print"></i></button>
-  ${botonEliminarAdmin(`eliminarPedido(${p.idPedido})`)}
-</td>
-      </tr>`).join('')
+    ? pedidos.map(p => {
+        const puedeAvanzar = secuenciaIA.hasOwnProperty(p.estado);
+        const siguienteEstado = secuenciaIA[p.estado];
+        
+        return `<tr>
+          <td>#${p.idPedido}</td>
+          <td>${esc(byId(clientes, 'idCliente', p.idCliente)?.nombre || `Cliente #${p.idCliente}`)}</td>
+          <td>${date(p.fechaPedido)}</td>
+          <td>${money(p.total)}</td>
+          <td><span class="badge estado ${p.estado === 'Enviado' ? 'estado-enviado' : p.estado === 'Entregado' ? 'estado-entregado' : ''}">${esc(p.estado || '—')}</span></td>
+          <td>${esc(p.observaciones || '—')}</td>
+          <td class="actions">
+            ${puedeAvanzar
+              ? `<button class="btn-icon btn-success" title="IA: Pasar a ${siguienteEstado}" onclick="iaAvanzarPedido(${p.idPedido}, '${p.estado}', '${siguienteEstado}')">✅</button>`
+              : ''}
+            <button class="btn-icon" title="Imprimir reporte del pedido" onclick="imprimirReportePedido(${p.idPedido})"><i class="fi fi-rr-print"></i></button>
+            ${botonEliminarAdmin(`eliminarPedido(${p.idPedido})`)}
+          </td>
+        </tr>`;
+      }).join('')
     : '<tr><td colspan="7" style="text-align:center">No hay pedidos registrados</td></tr>';
 }
+
 
 
 function opcionesProductosPedido() {
@@ -654,7 +667,7 @@ async function abrirModalPedido() {
   divResultados.innerHTML = '';
   inputIdCliente.value = '';
 
-  // ✅ ESCUCHAR LO QUE ESCRIBES — SIN clonar
+  //ESCUCHAR LO QUE ESCRIBES — SIN clonar
   inputBusqueda.oninput = function () {
     const termino = this.value.trim().toLowerCase();
     divResultados.innerHTML = '';
@@ -1448,4 +1461,70 @@ function inicializarBusquedaProducto(contenedor, idSeleccionado = '') {
 // ========== FUNCIONES AUXILIARES FALTANTES ==========
 function cerrarModal(id) {
   document.getElementById(id)?.classList.remove('active');
+}
+
+//Función central de automatización de estados
+async function iaAvanzarPedido(idPedido, estadoActual, estadoSiguiente) {
+  const confirmar = confirm(
+    `Asistente IA\n\n` +
+    `Pedido #${idPedido}\n` +
+    `Estado actual: ${estadoActual}\n` +
+    `→ Cambiar a: ${estadoSiguiente}\n\n` +
+    `¿Confirmar cambio automático?`
+  );
+  
+  if (!confirmar) return;
+
+  try {
+    await actualizarPedido(idPedido, {
+      estado: estadoSiguiente,
+      observaciones: `IA: Confirmado automáticamente — pasó de "${estadoActual}" a "${estadoSiguiente}"`
+    });
+    
+    alert(`✅ Pedido #${idPedido} actualizado a: ${estadoSiguiente}`);
+    await cargarPedidos(); // Refrescar tabla
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  }
+}
+
+// Función de automatización de estados por IA
+async function iaAvanzarPedido(idPedido, estadoActual, estadoSiguiente) {
+  const confirmar = confirm(
+    `🤖 Asistente IA\n\n` +
+    `Pedido #${idPedido}\n` +
+    `Estado actual: ${estadoActual}\n` +
+    `→ Cambiar a: ${estadoSiguiente}\n\n` +
+    `¿Confirmar cambio automático?`
+  );
+  
+  if (!confirmar) return;
+
+  try {
+    // Llamar al endpoint que avanza el estado en el backend
+    const respuesta = await fetch(
+      `${API_BASE}/pedidos/${idPedido}/cambiar-estado`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          estadoNuevo: estadoSiguiente,
+          observacion: `IA: Cambiado automáticamente de "${estadoActual}" a "${estadoSiguiente}"`
+        })
+      }
+    );
+
+    const datos = await respuesta.json().catch(() => ({}));
+    
+    if (respuesta.ok && datos.success !== false) {
+      alert(`Pedido #${idPedido} → ${estadoSiguiente}`);
+      await cargarDatos();
+      await renderPedidos();
+    } else {
+      alert(`${datos.message || 'No se pudo actualizar el estado'}`);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al conectar con el servidor. Intenta de nuevo.');
+  }
 }
