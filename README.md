@@ -29,7 +29,7 @@ Permite gestionar productos, inventario, movimientos de entrada/salida, pedidos 
 | Despliegue | Backend en [Render](https://render.com) · Frontend en GitHub Pages |
 | Contenedores | Docker (multi-stage Maven + JRE 17) |
 | Control de versiones | Git + GitHub |
-| IDE | VS Code / IntelliJ IDEA / Spring Tool Suite |
+| IDE | VS Code / Spring Tool Suite |
 
 ---
 
@@ -233,7 +233,7 @@ Respuesta típica:
 | Inicio | 31 ago 2026 | Completada |
 | Análisis y Diseño | 30 sep 2026 | Completada |
 | Construcción | 08 nov 2026 | Completada |
-| Validación y Pruebas | 20 nov 2026 | En curso |
+| Validación y Pruebas | 20 nov 2026 | Completada |
 | Entrega final | 23 nov 2026 | Pendiente |
 
 ---

@@ -155,7 +155,7 @@ public class PedidoController {
         pedido.setEstado("Entregado");
         String obsActual = pedido.getObservaciones();
         String nuevaObs = (obsActual != null ? obsActual + " | " : "")
-                        + "🤖 IA: " + motivo;
+                        + "IA: " + motivo;
         pedido.setObservaciones(nuevaObs);
 
         Pedido guardado = pedidoRepository.save(pedido);
