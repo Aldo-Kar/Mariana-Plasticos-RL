@@ -230,9 +230,9 @@ Respuesta típica:
 
 | Fase | Fecha límite | Estado (nov 2026) |
 |---|---|---|
-| Inicio | 31 ago 2026 | Completada |
+| Inicio | 18 ago 2026 | Completada |
 | Análisis y Diseño | 30 sep 2026 | Completada |
-| Construcción | 08 nov 2026 | Completada |
+| Construcción | 17 oct 2026 | Completada |
 | Validación y Pruebas | 20 nov 2026 | Completada |
 | Entrega final | 23 nov 2026 | Pendiente |
 
